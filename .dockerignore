@@ -1,0 +1,11 @@
+/.idea
+/dump
+/files
+/log
+/node_modules
+Dockerfile
+Makefile
+.dockerignore
+.git
+.gitignore
+secret.env

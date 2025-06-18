@@ -1,0 +1,32 @@
+version: '1.0'
+services:
+  db_info:
+    image: "mongo"
+    volumes:
+      - db-informator:/data/db
+      - init-db-informator:/docker-entrypoint-initdb.d
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=passwordXXX
+      - MONGO_INITDB_DATABASE=admin
+  informator_app:
+    build: .
+    ports:
+      - "3200:3200"
+    environment:
+      - SERVER_PORT=3200
+      - NODE_ENV=dev
+      - DB_USER=root
+      - DB_PASS=passwordXXX
+      - DB_HOST=db_info
+      - DB_PORT=27017
+      - DB_NAME=admin
+      - JWT_CHECK=true
+      - JWT_SECRET_KEY=any secret phrase
+    volumes:
+      - user-avatar-informator:/informator/files/photo
+      - init-db-informator:/informator/libs/db.init
+volumes:
+  db-informator:
+  user-avatar-informator:
+  init-db-informator:

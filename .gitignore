@@ -1,0 +1,6 @@
+/node_modules
+/log
+secret.env
+/files
+/dump
+/fixtures/woble.txt

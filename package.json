@@ -1,0 +1,42 @@
+{
+  "name": "informator",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "db:init": "node ./libs/db.init.js",
+    "db:drop": "node ./libs/db.init.js --drop",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GeoS74/informator.git"
+  },
+  "author": "GeoS74",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GeoS74/informator/issues"
+  },
+  "homepage": "https://github.com/GeoS74/informator#readme",
+  "dependencies": {
+    "@koa/cors": "^4.0.0",
+    "dotenv": "^16.0.3",
+    "jsonwebtoken": "^9.0.0",
+    "koa": "^2.14.1",
+    "koa-body": "^6.0.1",
+    "koa-mount": "^4.0.0",
+    "koa-router": "^12.0.0",
+    "koa-static": "^5.0.0",
+    "log4js": "^6.7.1",
+    "mongoose": "^6.9.1",
+    "mongoose-unique-validator": "^3.1.0",
+    "sharp": "^0.31.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5"
+  }
+}
