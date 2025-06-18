@@ -27,9 +27,13 @@ const Status = require('../models/Status');
   await Status.insertMany([
     { title: 'Новая заявка', code: 10 },
     { title: 'В работе', code: 20 },
-    { title: 'На согласовании механика', code: 30 },
+    { title: 'Согласование', code: 30 },
     { title: 'Согласовано механиком', code: 40 },
+    { title: 'Ремонт завершен', code: 50 },
     { title: 'Согласовано заказчиком', code: 50 },
+    { title: 'Выложено в ЭДО', code: 50 },
+    { title: 'Подписано в ЭДО', code: 50 },
+    { title: 'Оплачено', code: 50 },
   ])
     .then(() => logger.info('create and init collection "status"'))
     .catch((error) => logger.warn(error.message))
