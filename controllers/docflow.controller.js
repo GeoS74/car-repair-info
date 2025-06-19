@@ -138,6 +138,7 @@ function _addDoc({
   recipient,
   deadLine,
   sum,
+  statusCode,
 }) {
   return Doc.create({
     title,
@@ -150,6 +151,7 @@ function _addDoc({
     recipient,
     deadLine,
     sum,
+    statusCode,
   })
     .then((doc) => Doc.findById(doc._id)
       .populate('acceptor.user')
@@ -167,6 +169,7 @@ function _updateDoc(id, {
   recipient,
   deadLine,
   sum,
+  statusCode,
 }) {
   return Doc.findByIdAndUpdate(
     id,
@@ -178,6 +181,7 @@ function _updateDoc(id, {
       recipient,
       deadLine,
       sum,
+      statusCode,
     },
     {
       new: true,

@@ -51,6 +51,9 @@ const Schema = new mongoose.Schema({
   // поля для документа типа: Счёт
   deadLine: Date,
   sum: Number,
+
+  // поля для документа тапи: Заказ-наряд
+  statusCode: Number,
 }, {
   timestamps: true,
 });

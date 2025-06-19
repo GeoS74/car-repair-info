@@ -41,4 +41,6 @@ module.exports = (data) => ({
 
   deadLine: data.deadLine,
   sum: data.sum,
+
+  statusCode: data.statusCode,
 });

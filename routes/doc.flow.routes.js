@@ -93,6 +93,7 @@ router.post(
   validator.checkRightOnCreate,
 
   validator.title,
+  validator.statusCode,
   validator.acceptor,
   validator.recipient,
   validator.scanCopy,
@@ -107,6 +108,7 @@ router.patch(
   validator.checkRightOnUpdate,
 
   validator.title,
+  validator.statusCode,
   validator.acceptor,
   validator.recipient,
   validator.scanCopy,

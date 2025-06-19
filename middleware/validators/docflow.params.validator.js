@@ -3,6 +3,7 @@ const { isValidObjectId } = require('mongoose');
 const controllerDoc = require('../../controllers/docflow.controller');
 const actions = require('../../controllers/action.controller');
 const logger = require('../../libs/logger');
+const Status = require('../../models/Status');
 
 // ATTENTION: use this validator only after directingId and taskId validate
 // если у пользователя есть права на взаимодействие с типом документа
@@ -237,6 +238,23 @@ module.exports.email = async (ctx, next) => {
 
   await next();
 };
+
+module.exports.statusCode = async (ctx, next) => {
+  const statusCode = parseInt(ctx.request?.body?.statusCode, 10) || 0;
+  const status = await _getStatus(statusCode);
+  if (!status) {
+    _deleteFile(ctx.request.files);
+    ctx.throw(400, 'invalid status code');
+  }
+
+  ctx.request.body.statusCode = statusCode;
+
+  await next();
+};
+
+async function _getStatus(statusCode) {
+  return Status.findOne({ code: statusCode });
+}
 
 function _checkEmail(email) {
   return !!email;
