@@ -151,6 +151,15 @@ router.patch(
   controller.recipienting,
 );
 
+router.patch(
+  '/changeStatus/:id',
+  validator.objectId,
+  validator.checkAccessDocTypesById,
+  // validator.checkRightOnAccepting,
+
+  controller.changeStatus,
+);
+
 module.exports.routes = router.routes();
 
 // static files

@@ -466,6 +466,13 @@ module.exports.recipienting = async (ctx) => {
   ctx.body = mapper(doc);
 };
 
+module.exports.changeStatus = async (ctx) => {
+
+
+  ctx.status = 200;
+  // ctx.body = mapper(doc);
+};
+
 function _acceptDoc(id, acceptor) {
   return Doc.findByIdAndUpdate(
     id,

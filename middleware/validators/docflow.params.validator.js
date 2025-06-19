@@ -39,6 +39,8 @@ module.exports.checkAccessDocTypesById = async (ctx, next) => {
 
   const doc = ctx.body;
 
+  console.log(ctx.accessDocTypes)
+
   for (const e of ctx.accessDocTypes) {
     if (e[0] === doc.directing.id.toString()) {
       if (e[1] === doc.task.id.toString()) {
