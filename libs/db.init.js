@@ -30,10 +30,10 @@ const Status = require('../models/Status');
     { title: 'Согласование', code: 30 },
     { title: 'Согласовано механиком', code: 40 },
     { title: 'Ремонт завершен', code: 50 },
-    { title: 'Согласовано заказчиком', code: 50 },
-    { title: 'Выложено в ЭДО', code: 50 },
-    { title: 'Подписано в ЭДО', code: 50 },
-    { title: 'Оплачено', code: 50 },
+    { title: 'Согласовано заказчиком', code: 60 },
+    { title: 'Выложено в ЭДО', code: 70 },
+    { title: 'Подписано в ЭДО', code: 80 },
+    { title: 'Оплачено', code: 90 },
   ])
     .then(() => logger.info('create and init collection "status"'))
     .catch((error) => logger.warn(error.message))
