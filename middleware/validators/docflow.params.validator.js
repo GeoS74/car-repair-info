@@ -39,8 +39,6 @@ module.exports.checkAccessDocTypesById = async (ctx, next) => {
 
   const doc = ctx.body;
 
-  console.log(ctx.accessDocTypes)
-
   for (const e of ctx.accessDocTypes) {
     if (e[0] === doc.directing.id.toString()) {
       if (e[1] === doc.task.id.toString()) {
@@ -99,6 +97,15 @@ module.exports.checkRightOnRecipienting = async (ctx, next) => {
   if (ctx.accessDocTypes[2].indexOf(actions.FROZEN_LIST.get('Ознакомиться')) === -1) {
     _deleteFile(ctx.request.files);
     ctx.throw(403, 'agreed to the document type is denied');
+  }
+
+  await next();
+};
+
+module.exports.checkRightOnChangeStatus = async (ctx, next) => {
+  if (ctx.accessDocTypes[2].indexOf(actions.FROZEN_LIST.get('Изменять статусы')) === -1) {
+    _deleteFile(ctx.request.files);
+    ctx.throw(403, 'change status to the document type is denied');
   }
 
   await next();
@@ -244,6 +251,7 @@ module.exports.email = async (ctx, next) => {
 module.exports.statusCode = async (ctx, next) => {
   const statusCode = parseInt(ctx.request?.body?.statusCode, 10) || 0;
   const status = await _getStatus(statusCode);
+  
   if (!status) {
     _deleteFile(ctx.request.files);
     ctx.throw(400, 'invalid status code');

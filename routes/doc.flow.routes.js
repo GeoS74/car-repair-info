@@ -153,9 +153,11 @@ router.patch(
 
 router.patch(
   '/changeStatus/:id',
+  koaBody(optional),
   validator.objectId,
   validator.checkAccessDocTypesById,
-  // validator.checkRightOnAccepting,
+  validator.checkRightOnChangeStatus,
+  validator.statusCode,
 
   controller.changeStatus,
 );

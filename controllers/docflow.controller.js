@@ -466,13 +466,6 @@ module.exports.recipienting = async (ctx) => {
   ctx.body = mapper(doc);
 };
 
-module.exports.changeStatus = async (ctx) => {
-
-
-  ctx.status = 200;
-  // ctx.body = mapper(doc);
-};
-
 function _acceptDoc(id, acceptor) {
   return Doc.findByIdAndUpdate(
     id,
@@ -491,6 +484,29 @@ function _recipientDoc(id, recipient) {
     id,
     { recipient },
     { new: true },
+  )
+    .populate('acceptor.user')
+    .populate('recipient.user')
+    .populate('directing')
+    .populate('task')
+    .populate('author');
+}
+
+module.exports.changeStatus = async (ctx) => {
+  const doc = await _changeStatus(ctx.params.id, ctx.request.body);
+
+  if (!doc) {
+    ctx.throw(404, 'doc not found');
+  }
+  ctx.status = 200;
+  ctx.body = mapper(doc);
+};
+
+function _changeStatus(id, {statusCode}) {
+  return Doc.findByIdAndUpdate(
+    id,
+    {statusCode},
+    {new: true, },
   )
     .populate('acceptor.user')
     .populate('recipient.user')
