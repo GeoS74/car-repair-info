@@ -12,6 +12,7 @@ const actionRoutes = require('./routes/action.routes');
 const statusRoutes = require('./routes/status.routes');
 const accessSettingRoutes = require('./routes/access.setting.routes');
 const docFlowRoutes = require('./routes/doc.flow.routes');
+const docCommentsRoutes = require('./routes/doc.comments.routes');
 
 const app = new Koa();
 
@@ -31,5 +32,6 @@ app.use(statusRoutes);
 app.use(accessSettingRoutes);
 app.use(docFlowRoutes.routes);
 app.use(docFlowRoutes.static);
+app.use(docCommentsRoutes.routes);
 
 module.exports = app;

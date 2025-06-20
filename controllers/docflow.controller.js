@@ -502,11 +502,11 @@ module.exports.changeStatus = async (ctx) => {
   ctx.body = mapper(doc);
 };
 
-function _changeStatus(id, {statusCode}) {
+function _changeStatus(id, { statusCode }) {
   return Doc.findByIdAndUpdate(
     id,
-    {statusCode},
-    {new: true, },
+    { statusCode },
+    { new: true },
   )
     .populate('acceptor.user')
     .populate('recipient.user')
