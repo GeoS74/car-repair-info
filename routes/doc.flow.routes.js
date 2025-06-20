@@ -93,7 +93,7 @@ router.post(
   validator.checkRightOnCreate,
 
   validator.title,
-  validator.statusCode,
+  validator.checkStatusCode,
   validator.acceptor,
   validator.recipient,
   validator.scanCopy,
@@ -108,7 +108,7 @@ router.patch(
   validator.checkRightOnUpdate,
 
   validator.title,
-  validator.statusCode,
+  validator.checkStatusCode,
   validator.acceptor,
   validator.recipient,
   validator.scanCopy,
@@ -157,7 +157,7 @@ router.patch(
   validator.objectId,
   validator.checkAccessDocTypesById,
   validator.checkRightOnChangeStatus,
-  validator.statusCode,
+  validator.checkStatusCode,
 
   controller.changeStatus,
 );
