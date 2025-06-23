@@ -53,6 +53,12 @@ module.exports.tascId = async (ctx, next) => {
   await next();
 };
 
+module.exports.statusCode = async (ctx, next) => {
+  ctx.query.statusCode = parseInt(ctx.query.statusCode, 10) || 0;
+
+  await next();
+};
+
 /**
  * валидаторы acceptor, recipient, author можно не включать
  * контроллер в любом случае сравнивает значение этих параметров с определенными значениями

@@ -61,6 +61,7 @@ router.get(
   validatorSearch.limit,
   validatorSearch.directingId,
   validatorSearch.tascId,
+  validatorSearch.statusCode,
 
   controller.search,
 );
@@ -72,6 +73,7 @@ router.get(
   validatorSearch.limit,
   validatorSearch.directingId,
   validatorSearch.tascId,
+  validatorSearch.statusCode,
 
   controller.searchCount,
 );

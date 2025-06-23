@@ -338,6 +338,7 @@ function _makeFilterRules({
   directingId,
   taskId,
   accessDocTypes,
+  statusCode,
 }) {
   const filter = {};
   const projection = {};
@@ -404,6 +405,10 @@ function _makeFilterRules({
 
   if (lastId) {
     filter._id = { $lt: lastId };
+  }
+
+  if (statusCode) {
+    filter.statusCode = statusCode;
   }
 
   return { filter, projection, limit };
