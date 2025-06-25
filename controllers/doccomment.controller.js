@@ -1,8 +1,8 @@
-const fs = require('fs/promises');
-const path = require('path');
+// const fs = require('fs/promises');
+// const path = require('path');
 const Comment = require('../models/Comment');
 const mapper = require('../mappers/doccomment.mapper');
-const logger = require('../libs/logger');
+// const logger = require('../libs/logger');
 const controllerUser = require('./user.controller');
 
 module.exports.getMe = async (ctx, next) => {
@@ -54,16 +54,16 @@ async function _searchComment(docId) {
     .populate('author');
 }
 
-async function _processingScans(scans) {
-  const res = [];
-  for (const scan of scans) {
-    await fs.rename(scan.filepath, path.join(__dirname, `../files/scan/${scan.newFilename}`))
-      .catch((error) => logger.error(error.mesasge));
+// async function _processingScans(scans) {
+//   const res = [];
+//   for (const scan of scans) {
+//     await fs.rename(scan.filepath, path.join(__dirname, `../files/scan/${scan.newFilename}`))
+//       .catch((error) => logger.error(error.mesasge));
 
-    res.push({
-      originalName: scan.originalFilename,
-      fileName: scan.newFilename,
-    });
-  }
-  return res;
-}
+//     res.push({
+//       originalName: scan.originalFilename,
+//       fileName: scan.newFilename,
+//     });
+//   }
+//   return res;
+// }
