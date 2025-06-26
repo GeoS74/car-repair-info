@@ -248,16 +248,21 @@ module.exports.email = async (ctx, next) => {
   await next();
 };
 
+// если statusCode передаётся, то проверить его наличие через _getStatus
+// если не передаётся, то возможно это документ без статусов
 module.exports.checkStatusCode = async (ctx, next) => {
   const statusCode = parseInt(ctx.request?.body?.statusCode, 10) || 0;
-  const status = await _getStatus(statusCode);
 
-  if (!status) {
-    _deleteFile(ctx.request.files);
-    ctx.throw(400, 'invalid status code');
+  if (statusCode) {
+    const status = await _getStatus(statusCode);
+
+    if (!status) {
+      _deleteFile(ctx.request.files);
+      ctx.throw(400, 'invalid status code');
+    }
+
+    ctx.request.body.statusCode = statusCode;
   }
-
-  ctx.request.body.statusCode = statusCode;
 
   await next();
 };
