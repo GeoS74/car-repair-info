@@ -1,6 +1,7 @@
 const fs = require('fs/promises');
 const path = require('path');
 const Doc = require('../models/Doc');
+const Comment = require('../models/Comment');
 const mapper = require('../mappers/docflow.mapper');
 const logger = require('../libs/logger');
 const controllerUser = require('./user.controller');
@@ -84,6 +85,9 @@ module.exports.delete = async (ctx) => {
     _deleteScans(doc.files);
   }
 
+  /* delete comments */
+  _deleteRelatedComments(doc.id);
+
   ctx.status = 200;
   ctx.body = mapper(doc);
 };
@@ -106,6 +110,11 @@ module.exports.deleteAtatchedFile = async (ctx) => {
   ctx.status = 200;
   ctx.body = mapper(doc);
 };
+
+function _deleteRelatedComments(docId) {
+  return Comment.deleteMany({ doc: docId })
+    .catch((error) => logger.error(error.mesasge));
+}
 
 function _getDoc(id) {
   return Doc.findById(id)
