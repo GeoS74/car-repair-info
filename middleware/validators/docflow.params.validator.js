@@ -4,6 +4,7 @@ const controllerDoc = require('../../controllers/docflow.controller');
 const actions = require('../../controllers/action.controller');
 const logger = require('../../libs/logger');
 const Status = require('../../models/Status');
+const Car = require('../../models/Car');
 
 // ATTENTION: use this validator only after directingId and taskId validate
 // если у пользователя есть права на взаимодействие с типом документа
@@ -311,4 +312,28 @@ function _deleteFile(files) {
       }
     }
   }
+}
+
+// если checkCarId передаётся, то проверить его наличие через _getCar
+// если не передаётся, то возможно это документ без привязки к автомобилю
+module.exports.checkCarId = async (ctx, next) => {
+  const carId = ctx.request?.body?.carId;
+
+  if (carId) {
+    if (!_checkObjectId(carId)) {
+      _deleteFile(ctx.request.files);
+      ctx.throw(400, 'invalid car uid');
+    }
+
+    if (!_getCar(carId)) {
+      _deleteFile(ctx.request.files);
+      ctx.throw(400, 'car not found');
+    }
+  }
+
+  await next();
+};
+
+async function _getCar(carId) {
+  return Car.findById(carId);
 }

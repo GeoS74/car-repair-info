@@ -43,4 +43,12 @@ module.exports = (data) => ({
   sum: data.sum,
 
   statusCode: data.statusCode,
+  car: !data?.car ? undefined : {
+    id: data.car._id,
+    carModel: data.car.carModel,
+    vin: data.car.vin,
+    stateNumber: data.car.stateNumber,
+    place: data.car.place || '',
+    yearProduction: data.car.yearProduction || '',
+  },
 });

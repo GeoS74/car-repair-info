@@ -113,7 +113,8 @@ function _getDoc(id) {
     .populate('recipient.user')
     .populate('directing')
     .populate('task')
-    .populate('author');
+    .populate('author')
+    .populate('car');
 }
 
 function _getDocAll(limit) {
@@ -124,7 +125,8 @@ function _getDocAll(limit) {
     .populate('recipient.user')
     .populate('directing')
     .populate('task')
-    .populate('author');
+    .populate('author')
+    .populate('car');
 }
 
 function _addDoc({
@@ -139,6 +141,7 @@ function _addDoc({
   deadLine,
   sum,
   statusCode,
+  carId,
 }) {
   return Doc.create({
     title,
@@ -152,13 +155,15 @@ function _addDoc({
     deadLine,
     sum,
     statusCode,
+    car: carId || undefined,
   })
     .then((doc) => Doc.findById(doc._id)
       .populate('acceptor.user')
       .populate('recipient.user')
       .populate('directing')
       .populate('task')
-      .populate('author'));
+      .populate('author')
+      .populate('car'));
 }
 
 function _updateDoc(id, {
@@ -191,7 +196,8 @@ function _updateDoc(id, {
     .populate('recipient.user')
     .populate('directing')
     .populate('task')
-    .populate('author');
+    .populate('author')
+    .populate('car');
 }
 
 function _deleteDoc(id) {
@@ -200,7 +206,8 @@ function _deleteDoc(id) {
     .populate('recipient.user')
     .populate('directing')
     .populate('task')
-    .populate('author');
+    .populate('author')
+    .populate('car');
 }
 
 function _updateAttachedFileList(id, files) {
@@ -213,7 +220,8 @@ function _updateAttachedFileList(id, files) {
     .populate('recipient.user')
     .populate('directing')
     .populate('task')
-    .populate('author');
+    .populate('author')
+    .populate('car');
 }
 
 function _deleteScans(files) {
@@ -316,7 +324,8 @@ async function _searchDoc(data) {
     .populate('recipient.user')
     .populate('directing')
     .populate('task')
-    .populate('author');
+    .populate('author')
+    .populate('car');
 }
 
 async function _searchDocCount(data) {
@@ -481,7 +490,8 @@ function _acceptDoc(id, acceptor) {
     .populate('recipient.user')
     .populate('directing')
     .populate('task')
-    .populate('author');
+    .populate('author')
+    .populate('car');
 }
 
 function _recipientDoc(id, recipient) {
@@ -494,7 +504,8 @@ function _recipientDoc(id, recipient) {
     .populate('recipient.user')
     .populate('directing')
     .populate('task')
-    .populate('author');
+    .populate('author')
+    .populate('car');
 }
 
 module.exports.changeStatus = async (ctx) => {
@@ -517,5 +528,6 @@ function _changeStatus(id, { statusCode }) {
     .populate('recipient.user')
     .populate('directing')
     .populate('task')
-    .populate('author');
+    .populate('author')
+    .populate('car');
 }

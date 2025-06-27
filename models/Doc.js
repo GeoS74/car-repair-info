@@ -3,6 +3,7 @@ const connection = require('../libs/connection');
 const Directing = require('./Directing');
 const Task = require('./Task');
 const User = require('./User');
+const Car = require('./Car');
 
 const Signatory = new mongoose.Schema({
   user: {
@@ -54,6 +55,10 @@ const Schema = new mongoose.Schema({
 
   // поля для документа тапи: Заказ-наряд
   statusCode: Number,
+  car: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Car,
+  },
 }, {
   timestamps: true,
 });

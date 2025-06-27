@@ -96,6 +96,7 @@ router.post(
 
   validator.title,
   validator.checkStatusCode,
+  validator.checkCarId,
   validator.acceptor,
   validator.recipient,
   validator.scanCopy,
