@@ -1,4 +1,5 @@
 const { isValidObjectId } = require('mongoose');
+const Doc = require('../../models/Doc');
 
 module.exports.title = async (ctx, next) => {
   if (!_checkTitle(ctx.request?.body?.title)) {
@@ -15,6 +16,19 @@ module.exports.objectId = async (ctx, next) => {
 
   await next();
 };
+
+module.exports.checkRelatedDocs = async (ctx, next) => {
+  const relatedDoc = await _getRelatedDoc(ctx.params.id);
+  if (relatedDoc) {
+    ctx.throw(400, 'this task has associated documents');
+  }
+
+  await next();
+};
+
+function _getRelatedDoc(id) {
+  return Doc.findOne({ task: id });
+}
 
 function _checkObjectId(id) {
   return isValidObjectId(id);

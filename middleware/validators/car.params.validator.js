@@ -1,5 +1,6 @@
 const { isValidObjectId } = require('mongoose');
 const transliteToEng = require('../../libs/translitter');
+const Doc = require('../../models/Doc');
 
 module.exports.carModel = async (ctx, next) => {
   const carModel = _checkText(ctx.request?.body?.carModel);
@@ -29,7 +30,7 @@ module.exports.stateNumber = async (ctx, next) => {
     ctx.throw(400, 'invalid state number');
   }
 
-  ctx.request.body.stateNumber = stateNumber;
+  ctx.request.body.stateNumber = stateNumber.replace(/\s/g, '').toUpperCase();
 
   await next();
 };
@@ -52,6 +53,23 @@ module.exports.objectId = async (ctx, next) => {
   await next();
 };
 
+module.exports.objectId = async (ctx, next) => {
+  if (!_checkObjectId(ctx.params.id)) {
+    ctx.throw(400, 'invalid car id');
+  }
+
+  await next();
+};
+
+module.exports.checkRelatedDocs = async (ctx, next) => {
+  const relatedDoc = await _getRelatedDoc(ctx.params.id);
+  if (relatedDoc) {
+    ctx.throw(400, 'this car has associated documents');
+  }
+
+  await next();
+};
+
 function _checkObjectId(id) {
   return isValidObjectId(id);
 }
@@ -66,4 +84,8 @@ function _checkVIN(vinCode) {
 
 function _checkText(text) {
   return text?.trim();
+}
+
+function _getRelatedDoc(id) {
+  return Doc.findOne({ car: id });
 }

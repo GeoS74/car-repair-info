@@ -45,8 +45,6 @@ module.exports.delete = async (ctx) => {
     ctx.throw(404, 'car not found');
   }
 
-  // необходимо документы, ссылающиеся на авто
-
   ctx.status = 200;
   ctx.body = mapper(car);
 };

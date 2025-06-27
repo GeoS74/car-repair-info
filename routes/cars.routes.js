@@ -50,6 +50,7 @@ router.patch(
 router.delete(
   '/:id',
   validator.objectId,
+  validator.checkRelatedDocs,
   controller.delete,
 );
 
