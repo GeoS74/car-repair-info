@@ -2,7 +2,7 @@ const Status = require('../models/Status');
 const mapper = require('../mappers/status.mapper');
 
 /**
- * Cписок действий жёстко зафиксирован и
+ * Cписок статусов жёстко зафиксирован и
  * в момент создания базы данных создаётся автоматически и изменению не подлежит,
  * записи получают каждый раз новые id
  * эти id документ не знает, соответственно клиент их передать не может
@@ -15,22 +15,22 @@ const mapper = require('../mappers/status.mapper');
  */
 
 module.exports.FROZEN_LIST = new Map();
-Status.find({}).then((res) => res.map((e) => this.FROZEN_LIST.set(e.title, e.id)));
+_getStatusAll().then((res) => res.map((e) => this.FROZEN_LIST.set(e.title, e.id)));
 
 module.exports.getAll = async (ctx) => {
   const status = ctx.query?.title
-    ? await _searchAction(ctx.query.title)
-    : await _getActionAll();
+    ? await _searchStatus(ctx.query.title)
+    : await _getStatusAll();
 
   ctx.status = 200;
   ctx.body = status.map((action) => (mapper(action)));
 };
 
-function _getActionAll() {
+function _getStatusAll() {
   return Status.find().sort({ _id: 1 });
 }
 
-async function _searchAction(title) {
+async function _searchStatus(title) {
   const filter = {
     $text: {
       $search: title,

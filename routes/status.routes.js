@@ -6,7 +6,7 @@ const accessCheck = require('../middleware/access.check');
 
 const router = new Router({ prefix: '/api/informator/status' });
 
-router.use(accessCheck);
+// router.use(accessCheck);
 router.get('/', controller.getAll);
 
 module.exports = router.routes();
