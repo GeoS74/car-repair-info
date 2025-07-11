@@ -1,10 +1,36 @@
+const { readdir, mkdir } = require('node:fs/promises');
 const Router = require('koa-router');
 const { koaBody } = require('koa-body');
 
+
 const controller = require('../controllers/car.controller');
 const validator = require('../middleware/validators/car.params.validator');
+const validatorExcel = require('../middleware/validators/car.excel.params.validator');
 const validatorSearch = require('../middleware/validators/search.params.validator');
 const accessCheck = require('../middleware/access.check');
+const excelReader = require('../middleware/excel.reader');
+
+(async () => {
+  try {
+    await readdir('./files/temp');
+  } catch (error) {
+    mkdir('./files/temp', {
+      recursive: true,
+    });
+  }
+})();
+
+const optional = {
+  formidable: {
+    uploadDir: './files/temp',
+    allowEmptyFiles: false,
+    minFileSize: 1,
+    multiples: true,
+    hashAlgorithm: 'md5',
+    keepExtensions: true,
+  },
+  multipart: true,
+};
 
 const router = new Router({ prefix: '/api/informator/cars' });
 
@@ -52,6 +78,16 @@ router.delete(
   validator.objectId,
   validator.checkRelatedDocs,
   controller.delete,
+);
+
+router.post(
+  '/upload',
+  koaBody(optional),
+  validatorExcel.checkFile,
+  validatorExcel.checkStructure,
+  excelReader.file,
+  // controller.upload,
+  (ctx => ctx.status = 200)
 );
 
 module.exports = router.routes();
