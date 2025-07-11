@@ -86,8 +86,7 @@ router.post(
   validatorExcel.checkFile,
   validatorExcel.checkStructure,
   excelReader.file,
-  // controller.upload,
-  (ctx => ctx.status = 200)
+  controller.upload,
 );
 
 module.exports = router.routes();

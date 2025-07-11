@@ -129,3 +129,31 @@ function _makeFilterRules({
 
   return { filter, projection, limit };
 }
+
+module.exports.upload = async (ctx) => {
+  let arr = [];
+  for (let i = 0; i < ctx.rows.length; i++) {
+
+    arr.push({
+      carModel: ctx.rows[i][ctx.structure.carModelField] || undefined,
+      vin: ctx.rows[i][ctx.structure.vinField] || undefined,
+      stateNumber: ctx.rows[i][ctx.structure.stateNumberField] || undefined,
+      place: ctx.rows[i][ctx.structure.placeField] || undefined,
+      yearProduction: ctx.rows[i][ctx.structure.yearProduction] || undefined,
+    })
+
+    if ((i + 1) % 10 === 0) {
+      await _addManyCars(arr);
+      arr = [];
+    }
+  }
+  if (arr.length > 0) {
+    await _addManyCars(arr);
+  }
+
+  ctx.status = 200;
+};
+
+function _addManyCars(cars) {
+  return Car.insertMany(cars, { ordered: false }); // пишет только строки у которых нет ошибок
+}
