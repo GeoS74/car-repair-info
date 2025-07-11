@@ -4,10 +4,11 @@ const { koaBody } = require('koa-body');
 const controller = require('../controllers/task.controller');
 const validator = require('../middleware/validators/task.params.validator');
 const accessCheck = require('../middleware/access.check');
+const isAdmin = require('../middleware/isAdmin');
 
 const router = new Router({ prefix: '/api/informator/task' });
 
-router.use(accessCheck);
+router.use(accessCheck, isAdmin);
 router.get('/:id', validator.objectId, controller.get);
 router.get('/', controller.getAll);
 router.post('/', koaBody({ multipart: true }), validator.title, controller.add);

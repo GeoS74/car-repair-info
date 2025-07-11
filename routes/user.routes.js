@@ -8,6 +8,7 @@ const controller = require('../controllers/user.controller');
 const validator = require('../middleware/validators/user.params.validator');
 const validatorSearch = require('../middleware/validators/search.params.validator');
 const accessCheck = require('../middleware/access.check');
+const isAdmin = require('../middleware/isAdmin');
 
 (async () => {
   try {
@@ -43,6 +44,7 @@ router.use(accessCheck, validator.email);
 
 router.get(
   '/search',
+  isAdmin,
   validatorSearch.searchString,
   validatorSearch.lastId,
   validatorSearch.limit,
@@ -56,7 +58,7 @@ router.get(
 router.get('/', controller.get);
 router.post('/', koaBody({ multipart: true }), validator.params, controller.add);
 router.patch('/', koaBody({ multipart: true }), validator.params, controller.update);
-router.delete('/', controller.delete);
+// router.delete('/', controller.delete); // user не должен сам себя удалять
 
 router.patch('/photo', koaBody(optional), validator.photo, controller.photo);
 
