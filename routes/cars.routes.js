@@ -33,7 +33,7 @@ const optional = {
 
 const router = new Router({ prefix: '/api/informator/cars' });
 
-router.use(accessCheck);
+// router.use(accessCheck);
 
 router.get(
   '/search/car',
@@ -84,9 +84,19 @@ router.post(
   koaBody(optional),
   validatorExcel.checkFile,
   validatorExcel.checkStructure,
-  // excelReader.readFile,
-  // controller.upload,
+  // excelReader.readFile, // without child process
+  // controller.upload, // without child process
   controller.startChildProcess,
+);
+
+router.get(
+  '/upload/state',
+  controller.stateChildProcess,
+);
+
+router.get(
+  '/upload/kill',
+  controller.killChildProcess,
 );
 
 module.exports = router.routes();

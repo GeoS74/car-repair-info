@@ -162,7 +162,7 @@ function _addManyCars(cars) {
 let bot;
 
 module.exports.startChildProcess = async (ctx) => {
-  if (!bot) {
+  if (!bot || bot.exitCode !== null) {
     bot = childProcess.fork(
       './child_process/upload.excel.process',
       {
@@ -184,14 +184,33 @@ module.exports.startChildProcess = async (ctx) => {
 
     bot.command('uploadExcel');
   }
-  // await next();
+
   ctx.status = 200;
 };
 
 module.exports.killChildProcess = async (ctx) => {
-  if (bot) {
+  if (bot && bot.exitCode == null) {
     bot.send('kill');
-    bot = null;
   }
+  ctx.body = {message: 'child process is exit'}
   ctx.status = 200;
 };
+
+module.exports.stateChildProcess = async (ctx) => {
+  let state = '';
+  console.log('stateChildProcess')
+  if (bot && bot.exitCode == null) {
+    console.log('запрос состояния')
+    state = await bot.command('state');
+    console.log('запрос состояния = ', state);
+  }
+  else {
+    state = 'загрузка файла завершена'
+  }
+
+  ctx.body = {
+    // exitCode: bot.exitCode,
+    message: state
+  }
+  ctx.status = 200;
+}
