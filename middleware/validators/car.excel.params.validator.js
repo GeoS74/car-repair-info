@@ -21,7 +21,7 @@ module.exports.checkFile = async (ctx, next) => {
     _deleteFile(ctx.request.files);
     ctx.throw(400, 'more than 1 file received by field "carsListFile"');
   }
- 
+
   if (!_checkMimeType(ctx.request.files.carsListFile.mimetype)) {
     _deleteFile(ctx.request.files);
     ctx.throw(400, 'file must be in excel format');
@@ -47,7 +47,7 @@ function _deleteFile(files) {
       if (Array.isArray(file)) {
         _deleteFile(file);
       } else {
-        logger.info('ok')
+        logger.info('ok');
         fs.unlink(file.filepath)
           .catch((error) => logger.error(error.mesasge));
       }

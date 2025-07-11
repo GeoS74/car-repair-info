@@ -2,13 +2,13 @@ const XLSX = require('xlsx');
 const fs = require('fs');
 const logger = require('../libs/logger');
 
-module.exports.file = async function (ctx, next) {
+module.exports.readFile = async (ctx, next) => {
   ctx.rows = _readExceltoArray(ctx.request.files.carsListFile.filepath, 0);
   _delTempFile(ctx.request.files.carsListFile.filepath);
   ctx.rows = _cutArray(ctx.rows, ctx.request.body?.startRow, ctx.request.body?.endRow);
 
   await next();
-}
+};
 
 function _readExceltoArray(filePath, numSheet) {
   let workbook = XLSX.readFile(filePath);

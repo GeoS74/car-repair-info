@@ -1,3 +1,5 @@
+const childProcess = require('child_process');
+
 const Car = require('../models/Car');
 const mapper = require('../mappers/car.mapper');
 
@@ -132,15 +134,14 @@ function _makeFilterRules({
 
 module.exports.upload = async (ctx) => {
   let arr = [];
-  for (let i = 0; i < ctx.rows.length; i++) {
-
+  for (let i = 0; i < ctx.rows.length; i += 1) {
     arr.push({
       carModel: ctx.rows[i][ctx.structure.carModelField] || undefined,
       vin: ctx.rows[i][ctx.structure.vinField] || undefined,
       stateNumber: ctx.rows[i][ctx.structure.stateNumberField] || undefined,
       place: ctx.rows[i][ctx.structure.placeField] || undefined,
       yearProduction: ctx.rows[i][ctx.structure.yearProduction] || undefined,
-    })
+    });
 
     if ((i + 1) % 10 === 0) {
       await _addManyCars(arr);
@@ -157,3 +158,40 @@ module.exports.upload = async (ctx) => {
 function _addManyCars(cars) {
   return Car.insertMany(cars, { ordered: false }); // пишет только строки у которых нет ошибок
 }
+
+let bot;
+
+module.exports.startChildProcess = async (ctx) => {
+  if (!bot) {
+    bot = childProcess.fork(
+      './child_process/upload.excel.process',
+      {
+        env: {
+          data: JSON.stringify({
+            structure: ctx.structure,
+            filePath: ctx.request.files.carsListFile.filepath,
+            startRow: ctx.request.body?.startRow,
+            endRow: ctx.request.body?.endRow,
+          }),
+        },
+      },
+    );
+
+    bot.command = (commandBot) => new Promise((res) => {
+      bot.once('message', (message) => res(message));
+      bot.send(commandBot);
+    });
+
+    bot.command('uploadExcel');
+  }
+  // await next();
+  ctx.status = 200;
+};
+
+module.exports.killChildProcess = async (ctx) => {
+  if (bot) {
+    bot.send('kill');
+    bot = null;
+  }
+  ctx.status = 200;
+};
