@@ -40,7 +40,7 @@ describe('/test/directing.test.js', () => {
       expect(response.status, 'если нет access токена сервер возвращает статус 401').to.be.equal(401);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+      response = await fetch(apiPath, {
         headers: {
           Authorization: `Bearer ${_getAccessTokenNOTAdmin()}`,
         },
@@ -50,7 +50,7 @@ describe('/test/directing.test.js', () => {
       expect(response.status, 'если нет access токена не админский сервер возвращает статус 403').to.be.equal(403);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+      response = await fetch(apiPath, {
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
         },
@@ -60,7 +60,7 @@ describe('/test/directing.test.js', () => {
     });
 
     it('create directing', async () => {
-      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+      let response = await fetch(apiPath, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -71,7 +71,7 @@ describe('/test/directing.test.js', () => {
       expect(response.status, 'поле title не передаётся сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+      response = await fetch(apiPath, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -86,7 +86,7 @@ describe('/test/directing.test.js', () => {
     // перед следующими тестами, должен идти тест для создания записи
 
     it('read directing', async () => {
-      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+      let response = await fetch(apiPath, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -98,7 +98,7 @@ describe('/test/directing.test.js', () => {
 
       const validId = response.data[0].id;
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/123`, {
+      response = await fetch(`${apiPath}/123`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -108,7 +108,7 @@ describe('/test/directing.test.js', () => {
       expect(response.status, 'запрашивается не валидный id сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${_getFakeId()}`, {
+      response = await fetch(`${apiPath}/${_getFakeId()}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -118,7 +118,7 @@ describe('/test/directing.test.js', () => {
       expect(response.status, 'запрашивается не существующий id сервер возвращает статус 404').to.be.equal(404);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${validId}`, {
+      response = await fetch(`${apiPath}/${validId}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -130,17 +130,17 @@ describe('/test/directing.test.js', () => {
     });
 
     it('search directing', async () => {
-      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+      let response = await fetch(apiPath, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
         },
       })
         .then(_getData);
-      
+
       const validTitle = response.data[0].title;
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/?title=${validTitle}fake`, {
+      response = await fetch(`${apiPath}/?title=${validTitle}fake`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -151,7 +151,7 @@ describe('/test/directing.test.js', () => {
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
       _expectResponeArrayRows.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/?title=${validTitle}`, {
+      response = await fetch(`${apiPath}/?title=${validTitle}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -164,7 +164,7 @@ describe('/test/directing.test.js', () => {
     });
 
     it('update directing', async () => {
-      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+      let response = await fetch(apiPath, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -174,7 +174,7 @@ describe('/test/directing.test.js', () => {
 
       const validId = response.data[0].id;
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/123`, {
+      response = await fetch(`${apiPath}/123`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -185,7 +185,7 @@ describe('/test/directing.test.js', () => {
       expect(response.status, 'запрашивается не валидный id сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${_getFakeId()}`, {
+      response = await fetch(`${apiPath}/${_getFakeId()}`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -196,7 +196,7 @@ describe('/test/directing.test.js', () => {
       expect(response.status, 'запрашивается не существующий id сервер возвращает статус 404').to.be.equal(404);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${validId}`, {
+      response = await fetch(`${apiPath}/${validId}`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -209,7 +209,7 @@ describe('/test/directing.test.js', () => {
     });
 
     it('delete directing', async () => {
-      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+      let response = await fetch(apiPath, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
@@ -219,41 +219,41 @@ describe('/test/directing.test.js', () => {
 
       const validId = response.data[0].id;
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/123`, {
+      response = await fetch(`${apiPath}/123`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        }
+        },
       })
         .then(_getData);
       expect(response.status, 'запрашивается не валидный id сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${_getFakeId()}`, {
+      response = await fetch(`${apiPath}/${_getFakeId()}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        }
+        },
       })
         .then(_getData);
       expect(response.status, 'запрашивается не существующий id сервер возвращает статус 404').to.be.equal(404);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${validId}`, {
+      response = await fetch(`${apiPath}/${validId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        }
+        },
       })
         .then(_getData);
       expect(response.status, 'запись удаляется сервер возвращает статус 200').to.be.equal(200);
       _expectFieldState.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${validId}`, {
+      response = await fetch(`${apiPath}/${validId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        }
+        },
       })
         .then(_getData);
       expect(response.status, 'запрашивается id удалённой записи сервер возвращает статус 404').to.be.equal(404);
