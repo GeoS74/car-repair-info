@@ -58,7 +58,7 @@ async function _upload(rows) {
       yearProduction: rows[i][data.structure.yearProduction] || undefined,
     });
 
-    if ((i + 1) % 20 === 0) {
+    if ((i + 1) % 5 === 0) {
       await _addManyCars(arr);
       arr = [];
     }
