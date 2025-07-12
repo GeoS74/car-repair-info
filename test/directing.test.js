@@ -32,35 +32,25 @@ describe('/test/directing.test.js', () => {
 
  
   describe('directing CRUD', () => {
-    const optional = {
-      headers: { 'Content-Type': 'application/json' },
-      method: 'POST',
-      body: JSON.stringify({}),
-    };
 
     // все роуты должны быть достпны при наличии access токена и только для админа
     it('check access token and check access only admin', async () => {
-      optional.method = 'GET';
-      optional.body = null;
+      const optional = {
+        headers: {},
+        method: 'GET',
+      };
 
       let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`)
       .then(_getData);
-      expect(response.status, 'сервер возвращает статус 401').to.be.equal(401);
+      expect(response.status, 'если нет access токена сервер возвращает статус 401').to.be.equal(401);
       _expectErrorFieldState.call(this, response.data);
-        
-      let accessToken = jwt.sign(
-        { 
-          user: {}
-        },
-        config.jwt.secretKey,
-        { expiresIn: 1800 },
-      );
-      optional.headers.Authorization = `Bearer ${accessToken}`;
+
+      optional.headers.Authorization = `Bearer ${_getAccessTokenNOTAdmin()}`;
 
       response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
         .then(_getData);
 
-      expect(response.status, 'сервер возвращает статус 403').to.be.equal(403);
+      expect(response.status, 'если нет access токена не админский сервер возвращает статус 403').to.be.equal(403);
       _expectErrorFieldState.call(this, response.data);
 
       accessToken = jwt.sign(
@@ -76,6 +66,17 @@ describe('/test/directing.test.js', () => {
       response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
       .then(_getData);
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
+  });
+
+  it('create directing', async () => {
+    const optional = {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${_getAccessTokenAdmin()}`
+      },
+      body: _getDefaultBody(),
+    };
+
   });
 
 });
@@ -99,4 +100,28 @@ function _expectErrorFieldState(data) {
   expect(data, 'сервер возвращает объект с описанием ошибки')
     .that.is.an('object')
     .to.have.property('error');
+}
+
+function _getAccessTokenNOTAdmin() {
+  return jwt.sign(
+    { user: {} },
+    config.jwt.secretKey,
+    { expiresIn: 1800 },
+  );
+}
+
+function _getAccessTokenAdmin() {
+  return jwt.sign(
+    { user: {
+      rank: 'admin'
+    } },
+    config.jwt.secretKey,
+    { expiresIn: 1800 },
+  );
+}
+
+function _getDefaultBody() {
+  let fd = new FormData();
+    fd.append('title', 'foo');
+    return fd;
 }
