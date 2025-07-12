@@ -27,7 +27,7 @@ app.use(aboutCompanyRoutes);
 app.use(userRoutes.routes);
 app.use(userRoutes.static);
 app.use(roleRoutes);
-app.use(directingRoutes);
+app.use(directingRoutes); // test ok
 app.use(taskRoutes);
 app.use(actionRoutes);
 app.use(statusRoutes);
