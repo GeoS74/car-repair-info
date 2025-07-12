@@ -128,6 +128,40 @@ describe('/test/directing.test.js', () => {
       _expectFieldState.call(this, response.data);
     });
 
+    it('search directing', async () => {
+      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+      })
+        .then(_getData);
+      
+      const validTitle = response.data[0].title;
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/?title=${validTitle}fake`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+      })
+        .then(_getData);
+
+      expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
+      _expectResponeArrayRows.call(this, response.data);
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/?title=${validTitle}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+      })
+        .then(_getData);
+
+      expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
+      _expectResponeArrayRows.call(this, response.data);
+    });
+
     it('update directing', async () => {
       let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
         method: 'GET',
@@ -171,6 +205,58 @@ describe('/test/directing.test.js', () => {
         .then(_getData);
       expect(response.status, 'запись обновляется сервер возвращает статус 200').to.be.equal(200);
       _expectFieldState.call(this, response.data);
+    });
+
+    it('delete directing', async () => {
+      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+      })
+        .then(_getData);
+
+      const validId = response.data[0].id;
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/123`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        }
+      })
+        .then(_getData);
+      expect(response.status, 'запрашивается не валидный id сервер возвращает статус 400').to.be.equal(400);
+      _expectErrorFieldState.call(this, response.data);
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${_getFakeId()}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        }
+      })
+        .then(_getData);
+      expect(response.status, 'запрашивается не существующий id сервер возвращает статус 404').to.be.equal(404);
+      _expectErrorFieldState.call(this, response.data);
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${validId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        }
+      })
+        .then(_getData);
+      expect(response.status, 'запись удаляется сервер возвращает статус 200').to.be.equal(200);
+      _expectFieldState.call(this, response.data);
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${validId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        }
+      })
+        .then(_getData);
+      expect(response.status, 'запрашивается id удалённой записи сервер возвращает статус 404').to.be.equal(404);
+      _expectErrorFieldState.call(this, response.data);
     });
   });
 });
@@ -237,6 +323,6 @@ function _getDefaultBody() {
 
 function _getBadBody() {
   const fd = new FormData();
-  fd.append('titles', 'foo');
+  fd.append('foo', 'foo');
   return fd;
 }
