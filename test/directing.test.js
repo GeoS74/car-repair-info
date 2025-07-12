@@ -53,31 +53,65 @@ describe('/test/directing.test.js', () => {
       expect(response.status, 'если нет access токена не админский сервер возвращает статус 403').to.be.equal(403);
       _expectErrorFieldState.call(this, response.data);
 
-      accessToken = jwt.sign(
-        { user: {
-          rank: 'admin'
-        } },
-        config.jwt.secretKey,
-        { expiresIn: 1800 },
-      );
-
-      optional.headers.Authorization = `Bearer ${accessToken}`;
+      optional.headers.Authorization = `Bearer ${_getAccessTokenAdmin()}`;
 
       response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
       .then(_getData);
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
-  });
+    });
 
-  it('create directing', async () => {
-    const optional = {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${_getAccessTokenAdmin()}`
-      },
-      body: _getDefaultBody(),
-    };
+    it('create directing', async () => {
+      const optional = {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`
+        },
+        body: _getBadBody(),
+      };
 
-  });
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
+        .then(_getData);
+
+      expect(response.status, 'поле title не передаётся сервер возвращает статус 400').to.be.equal(400);
+      _expectErrorFieldState.call(this, response.data);
+
+      optional.body = _getDefaultBody();
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
+        .then(_getData);
+
+      expect(response.status, 'сервер возвращает статус 201').to.be.equal(201);
+      _expectFieldState.call(this, response.data);
+    });
+
+    // перед следующими тестами, должен идти тест для создания записи
+
+    it('read directing', async () => {
+      const optional = {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`
+        },
+      };
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
+        .then(_getData);
+
+      expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
+      _expectResponeRows.call(this, response.data);
+      
+      const validId = response;
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/123`, optional)
+        .then(_getData);
+      
+      expect(response.status, 'запрашмвается не валидный id сервер возвращает статус 400').to.be.equal(400);
+      _expectErrorFieldState.call(this, response.data);
+
+      console.log(validId)
+      // console.log(_getFakeId(validId))
+
+    });
 
 });
 
@@ -90,10 +124,24 @@ async function _getData(response) {
   };
 }
 
+function _getFakeId(validId){
+  return validId[validId.length-1]+validId.replace(1);
+}
+
+function _expectResponeRows(data) {
+  expect(data, 'сервер возвращает массив')
+    .that.be.an('array');
+  
+  for(const e of data) {
+    expect(e, 'сервер возвращает массив объектов с полями id, title')
+    .to.have.keys(['id', 'title']);
+  }
+}
+
 function _expectFieldState(data) {
-  expect(data, 'сервер возвращает объект с полями id, title, message, isPublic, files, createdAt, updatedAt')
+  expect(data, 'сервер возвращает объект с полями id, title')
     .that.be.an('object')
-    .to.have.keys(['id', 'title', 'message', 'isPublic', 'files', 'createdAt', 'updatedAt']);
+    .to.have.keys(['id', 'title']);
 }
 
 function _expectErrorFieldState(data) {
@@ -123,5 +171,11 @@ function _getAccessTokenAdmin() {
 function _getDefaultBody() {
   let fd = new FormData();
     fd.append('title', 'foo');
+    return fd;
+}
+
+function _getBadBody() {
+  let fd = new FormData();
+    fd.append('titles', 'foo');
     return fd;
 }
