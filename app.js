@@ -14,6 +14,7 @@ const accessSettingRoutes = require('./routes/access.setting.routes');
 const docFlowRoutes = require('./routes/doc.flow.routes');
 const docCommentsRoutes = require('./routes/doc.comments.routes');
 const carsRoutes = require('./routes/cars.routes');
+const companyRoutes = require('./routes/company.routes');
 
 const app = new Koa();
 
@@ -35,5 +36,6 @@ app.use(docFlowRoutes.routes);
 app.use(docFlowRoutes.static);
 app.use(docCommentsRoutes.routes);
 app.use(carsRoutes);
+app.use(companyRoutes);
 
 module.exports = app;

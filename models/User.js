@@ -3,16 +3,21 @@
 const mongoose = require('mongoose');
 const connection = require('../libs/connection');
 const Role = require('./Role');
+const Company = require('./Company');
 
 const Schema = new mongoose.Schema({
-  roles: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: Role,
-  },
   email: {
     type: String,
     required: 'не заполнено обязательное поле {PATH}',
     unique: 'Не уникальное значение {PATH}',
+  },
+  roles: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: Role,
+  },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Company,
   },
   name: String,
   photo: String,

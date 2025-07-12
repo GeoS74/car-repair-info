@@ -7,6 +7,7 @@ const validator = require('../middleware/validators/car.params.validator');
 const validatorExcel = require('../middleware/validators/car.excel.params.validator');
 const validatorSearch = require('../middleware/validators/search.params.validator');
 const accessCheck = require('../middleware/access.check');
+const isAdmin = require('../middleware/isAdmin');
 // const excelReader = require('../middleware/excel.reader');
 
 (async () => {
@@ -49,8 +50,11 @@ router.get(
   controller.get,
 );
 
+// остальные роуты доступны только админу
+
 router.post(
   '/',
+  isAdmin,
   koaBody({ multipart: true }),
   validator.carModel,
   validator.stateNumber,
@@ -62,6 +66,7 @@ router.post(
 
 router.patch(
   '/:id',
+  isAdmin,
   koaBody({ multipart: true }),
   validator.objectId,
   validator.carModel,
@@ -74,6 +79,7 @@ router.patch(
 
 router.delete(
   '/:id',
+  isAdmin,
   validator.objectId,
   validator.checkRelatedDocs,
   controller.delete,
@@ -81,6 +87,7 @@ router.delete(
 
 router.post(
   '/upload',
+  isAdmin, // подумай что делать с временным файлом если его отправит не админ
   koaBody(optional),
   validatorExcel.checkFile,
   validatorExcel.checkStructure,
@@ -91,11 +98,13 @@ router.post(
 
 router.get(
   '/upload/state',
+  isAdmin,
   controller.stateChildProcess,
 );
 
 router.get(
   '/upload/kill',
+  isAdmin,
   controller.killChildProcess,
 );
 
