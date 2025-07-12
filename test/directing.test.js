@@ -18,6 +18,7 @@ if (config.node.env !== 'dev') {
 }
 
 describe('/test/directing.test.js', () => {
+  const apiPath = `http://localhost:${config.server.port}/api/informator/directing`;
   let _server;
 
   before(async () => {
@@ -34,7 +35,7 @@ describe('/test/directing.test.js', () => {
   describe('directing CRUD', () => {
     // все роуты должны быть достпны при наличии access токена и только для админа
     it('check access token and check access only admin', async () => {
-      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`)
+      let response = await fetch(apiPath)
         .then(_getData);
       expect(response.status, 'если нет access токена сервер возвращает статус 401').to.be.equal(401);
       _expectErrorFieldState.call(this, response.data);
