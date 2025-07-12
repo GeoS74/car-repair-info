@@ -1,6 +1,6 @@
 {
-  "name": "informator",
-  "version": "0.0.1",
+  "name": "car-repair-info",
+  "version": "0.0.2",
   "description": "",
   "main": "index.js",
   "scripts": {
