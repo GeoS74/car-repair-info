@@ -33,7 +33,7 @@ const optional = {
 
 const router = new Router({ prefix: '/api/informator/cars' });
 
-// router.use(accessCheck);
+router.use(accessCheck);
 
 router.get(
   '/search/car',

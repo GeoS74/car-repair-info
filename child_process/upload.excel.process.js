@@ -5,46 +5,50 @@ const Car = require('../models/Car');
 
 const data = JSON.parse(process.env.data);
 
-let state = '';
+let state = 'процесс запущен';
 
 process.on('message', (message) => {
-  switch(message){
+  switch (message) {
     case 'uploadExcel':
       _uploadExcel();
       break;
-  case 'kill':
-        process.exit();
-        break;
-        case 'state':
-          process.send(state);
-          break;
+
+    case 'state':
+      process.send(state);
+      break;
+    case 'kill':
+      process.exit();
+      break;
+    default:
+      process.send('unknown bot command');
   }
 });
 
 async function _uploadExcel() {
   state = 'загрузка файла началась';
-  console.log('загрузка файла началась')
+
   const rows = _readExcel();
   await _upload(rows);
-  console.log('загрузка файла end')
+
+  state = 'загрузка файла завершена';
+
   process.exit();
 }
 
-function delay(ms) {
-  return new Promise(res => {
-    setTimeout(() => {
-      res();
-    }, ms)
-  })
-}
+// function delay(ms) {
+//   return new Promise((res) => {
+//     setTimeout(() => {
+//       res();
+//     }, ms);
+//   });
+// }
 
 async function _upload(rows) {
-  let total = 0;
   let arr = [];
   for (let i = 0; i < rows.length; i += 1) {
-    await delay(150);
-    console.log('i=',i)
-    state = `обработано ${i+1} из ${rows.length}`;
+    // await delay(150); // for test
+
+    state = `обработано ${i + 1} из ${rows.length}`;
 
     arr.push({
       carModel: rows[i][data.structure.carModelField] || undefined,
@@ -54,19 +58,14 @@ async function _upload(rows) {
       yearProduction: rows[i][data.structure.yearProduction] || undefined,
     });
 
-    if ((i + 1) % 5 === 0) {
-      console.log(`записано ${total} из ${rows.length}`)
+    if ((i + 1) % 20 === 0) {
       await _addManyCars(arr);
-      total += arr.length;
       arr = [];
-       
     }
   }
   if (arr.length > 0) {
     await _addManyCars(arr);
   }
-
-  state = 'загрузка файла завершена';
 }
 
 function _addManyCars(cars) {
