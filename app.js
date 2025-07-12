@@ -22,14 +22,14 @@ if (config.node.env === 'dev') {
   app.use(cors());
 }
 
-app.use(userRoutes.routes);
+app.use(userRoutes.routes); // ...test dev
 app.use(userRoutes.static); // no test
 app.use(roleRoutes); // test ok
 app.use(directingRoutes); // test ok
 app.use(taskRoutes); // test ok
 app.use(actionRoutes); // test ok
 app.use(statusRoutes); // test ok
-app.use(accessSettingRoutes);
+app.use(accessSettingRoutes); // ...test dev
 app.use(docFlowRoutes.routes);
 app.use(docFlowRoutes.static); // no test
 app.use(docCommentsRoutes.routes);
