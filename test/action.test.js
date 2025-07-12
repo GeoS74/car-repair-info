@@ -36,7 +36,7 @@ describe(`/test/${apiName}.test.js`, () => {
     _server.close();
   });
 
-  describe(`${apiName} CRUD`, () => {
+  describe(`${apiName} frozen list`, () => {
     // все роуты должны быть доступны при наличии access токена и только для админа
     it('check access token and check access only admin', async () => {
       let response = await fetch(apiPath)

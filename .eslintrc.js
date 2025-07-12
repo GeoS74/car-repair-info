@@ -20,5 +20,5 @@ module.exports = {
     'no-await-in-loop': 'off',
     'no-param-reassign': 'off',
   },
-  // ignorePatterns: ['*.test.js', 'fixtures/*', 'files/*', '*mongosh.js'],
+  ignorePatterns: ['*.test.js', 'fixtures/*', 'files/*', '*mongosh.js'],
 };

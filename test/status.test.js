@@ -36,7 +36,7 @@ describe(`/test/${apiName}.test.js`, () => {
     _server.close();
   });
 
-  describe(`${apiName} CRUD`, () => {
+  describe(`${apiName} frozen list`, () => {
 
     it(`read ${apiName}`, async () => {
       let response = await fetch(apiPath, {
