@@ -5,6 +5,7 @@ const path = require('path');
 const FormData = require('form-data');
 const jwt = require('jsonwebtoken');
 require('dotenv').config({ path: '../secrets.env' });
+const mongoose = require('mongoose');
 const connection = require('../libs/connection');
 const logger = require('../libs/logger');
 const config = require('../config');
@@ -30,56 +31,53 @@ describe('/test/directing.test.js', () => {
     _server.close();
   });
 
- 
   describe('directing CRUD', () => {
-
     // все роуты должны быть достпны при наличии access токена и только для админа
     it('check access token and check access only admin', async () => {
-      const optional = {
-        headers: {},
-        method: 'GET',
-      };
-
       let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`)
-      .then(_getData);
+        .then(_getData);
       expect(response.status, 'если нет access токена сервер возвращает статус 401').to.be.equal(401);
       _expectErrorFieldState.call(this, response.data);
 
-      optional.headers.Authorization = `Bearer ${_getAccessTokenNOTAdmin()}`;
-
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenNOTAdmin()}`,
+        },
+      })
         .then(_getData);
 
       expect(response.status, 'если нет access токена не админский сервер возвращает статус 403').to.be.equal(403);
       _expectErrorFieldState.call(this, response.data);
 
-      optional.headers.Authorization = `Bearer ${_getAccessTokenAdmin()}`;
-
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
-      .then(_getData);
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+      })
+        .then(_getData);
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
     });
 
     it('create directing', async () => {
-      const optional = {
+      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
         },
         body: _getBadBody(),
-      };
-
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
+      })
         .then(_getData);
-
       expect(response.status, 'поле title не передаётся сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
-      optional.body = _getDefaultBody();
-
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+        body: _getDefaultBody(),
+      })
         .then(_getData);
-
       expect(response.status, 'сервер возвращает статус 201').to.be.equal(201);
       _expectFieldState.call(this, response.data);
     });
@@ -87,54 +85,115 @@ describe('/test/directing.test.js', () => {
     // перед следующими тестами, должен идти тест для создания записи
 
     it('read directing', async () => {
-      const optional = {
+      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
         },
-      };
-
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, optional)
+      })
         .then(_getData);
-
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
-      _expectResponeRows.call(this, response.data);
-      
-      const validId = response;
+      _expectResponeArrayRows.call(this, response.data);
 
-      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/123`, optional)
+      const validId = response.data[0].id;
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/123`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+      })
         .then(_getData);
-      
-      expect(response.status, 'запрашмвается не валидный id сервер возвращает статус 400').to.be.equal(400);
+      expect(response.status, 'запрашивается не валидный id сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
-      console.log(validId)
-      // console.log(_getFakeId(validId))
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${_getFakeId()}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+      })
+        .then(_getData);
+      expect(response.status, 'запрашивается не существующий id сервер возвращает статус 404').to.be.equal(404);
+      _expectErrorFieldState.call(this, response.data);
 
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${validId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+      })
+        .then(_getData);
+      expect(response.status, 'запись найдена сервер возвращает статус 200').to.be.equal(200);
+      _expectFieldState.call(this, response.data);
     });
 
-});
+    it('update directing', async () => {
+      let response = await fetch(`http://localhost:${config.server.port}/api/informator/directing`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+      })
+        .then(_getData);
 
+      const validId = response.data[0].id;
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/123`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+        body: _getBadBody(),
+      })
+        .then(_getData);
+      expect(response.status, 'запрашивается не валидный id сервер возвращает статус 400').to.be.equal(400);
+      _expectErrorFieldState.call(this, response.data);
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${_getFakeId()}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+        body: _getBadBody(),
+      })
+        .then(_getData);
+      expect(response.status, 'запрашивается не существующий id сервер возвращает статус 404').to.be.equal(404);
+      _expectErrorFieldState.call(this, response.data);
+
+      response = await fetch(`http://localhost:${config.server.port}/api/informator/directing/${validId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
+        },
+        body: _getDefaultBody(),
+      })
+        .then(_getData);
+      expect(response.status, 'запись обновляется сервер возвращает статус 200').to.be.equal(200);
+      _expectFieldState.call(this, response.data);
+    });
+  });
 });
 
 async function _getData(response) {
+  const data = await response.json();
   return {
     status: response.status,
-    data: await response.json(),
+    data,
   };
 }
 
-function _getFakeId(validId){
-  return validId[validId.length-1]+validId.replace(1);
+function _getFakeId() {
+  return mongoose.Types.ObjectId().toString();
 }
 
-function _expectResponeRows(data) {
+function _expectResponeArrayRows(data) {
   expect(data, 'сервер возвращает массив')
     .that.be.an('array');
-  
-  for(const e of data) {
+
+  for (const e of data) {
     expect(e, 'сервер возвращает массив объектов с полями id, title')
-    .to.have.keys(['id', 'title']);
+      .to.have.keys(['id', 'title']);
   }
 }
 
@@ -160,22 +219,24 @@ function _getAccessTokenNOTAdmin() {
 
 function _getAccessTokenAdmin() {
   return jwt.sign(
-    { user: {
-      rank: 'admin'
-    } },
+    {
+      user: {
+        rank: 'admin',
+      },
+    },
     config.jwt.secretKey,
     { expiresIn: 1800 },
   );
 }
 
 function _getDefaultBody() {
-  let fd = new FormData();
-    fd.append('title', 'foo');
-    return fd;
+  const fd = new FormData();
+  fd.append('title', 'foo');
+  return fd;
 }
 
 function _getBadBody() {
-  let fd = new FormData();
-    fd.append('titles', 'foo');
-    return fd;
+  const fd = new FormData();
+  fd.append('titles', 'foo');
+  return fd;
 }
