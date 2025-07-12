@@ -13,8 +13,8 @@ const app = require('../app');
 
 // это универсальный тест для простых CRUD API
 // переопредели модель для тестов и название API
-const Model = require('../models/Directing');
-const apiName = 'directing';
+const Model = require('../models/Role');
+const apiName = 'role';
 
 if (config.node.env !== 'dev') {
   logger.warn('Error: нельзя запускать тесты в производственной среде, это может привести к потере данных');
