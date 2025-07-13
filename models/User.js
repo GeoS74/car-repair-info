@@ -47,6 +47,9 @@ Schema.methods.setPosition = function sp() {
   return this;
 };
 
+// раскоммениируй этот индекс если поиск регуляркой будет работать медленно
+// Schema.index({ email: 1 });
+
 module.exports = connection.model('User', Schema);
 
 // справочно: пример использования middleware для 'findOneAndUpdate'

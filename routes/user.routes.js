@@ -54,6 +54,11 @@ router.get(
   controller.search,
 );
 
+router.get('/uid/:id',
+  validator.objectId,
+  controller.getById
+);
+
 // router.get('/all', /* добавить сюда проверку на админа */ controller.getAll);
 router.get('/', controller.get);
 router.post('/', koaBody({ multipart: true }), validator.params, controller.add);

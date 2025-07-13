@@ -3,6 +3,7 @@ const logger = require('./logger');
 const config = require('../config');
 const Action = require('../models/Action');
 const Status = require('../models/Status');
+const Task = require('../models/Task');
 
 (async () => {
   // dropped database
@@ -23,6 +24,12 @@ const Status = require('../models/Status');
   ])
     .then(() => logger.info('create and init collection "actions"'))
     .catch((error) => logger.warn(error.message));
+  
+    await Task.insertMany([
+      { title: 'Заказ-наряд' },
+    ])
+      .then(() => logger.info('create and init collection "tasks"'))
+      .catch((error) => logger.warn(error.message));
 
   await Status.insertMany([
     { title: 'Новая заявка', code: 10 },

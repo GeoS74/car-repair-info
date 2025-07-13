@@ -18,3 +18,7 @@ db.status.insertMany([
   { title: 'Подписано в ЭДО', code: 80 },
   { title: 'Оплачено', code: 90 },
 ]);
+
+db.tasks.insertMany([
+  { title: 'Заказ-наряд' },
+]);

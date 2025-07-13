@@ -1,6 +1,15 @@
 const fs = require('fs/promises');
+const { isValidObjectId } = require('mongoose');
 
 const logger = require('../../libs/logger');
+
+module.exports.objectId = async (ctx, next) => {
+  if (!_checkObjectId(ctx.params.id)) {
+    ctx.throw(400, 'invalid user id');
+  }
+
+  await next();
+};
 
 module.exports.email = async (ctx, next) => {
   if (!_checkEmail(ctx?.user?.email)) {
@@ -76,4 +85,8 @@ function _deleteFile(files) {
         .catch((error) => logger.error(error.mesasge));
     }
   }
+}
+
+function _checkObjectId(id) {
+  return isValidObjectId(id);
 }

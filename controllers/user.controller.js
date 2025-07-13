@@ -139,7 +139,7 @@ async function _makeFilterRules({
   }
 
   if (lastId) {
-    filter._id = { $lt: lastId };
+    filter._id = { $gt: lastId };
   }
 
   return { filter, limit };
@@ -147,6 +147,16 @@ async function _makeFilterRules({
 
 module.exports.get = async (ctx) => {
   const user = await _getUser(ctx.user);
+  if (!user) {
+    ctx.throw(404, 'user not found');
+  }
+
+  ctx.status = 200;
+  ctx.body = mapper(user);
+};
+
+module.exports.getById = async (ctx) => {
+  const user = await _getUserById(ctx.params.id);
   if (!user) {
     ctx.throw(404, 'user not found');
   }
@@ -220,6 +230,19 @@ module.exports.photo = async (ctx) => {
 
   await this.get(ctx);
 };
+
+function _getUserById(id) {
+
+  return User.findById(id)
+    .populate({
+      path: 'roles',
+      populate: [
+        { path: 'directings.directing' },
+        { path: 'directings.tasks.task' },
+        { path: 'directings.tasks.actions' },
+      ],
+    });
+}
 
 function _getUser({ email }) {
   return User.findOne({ email })

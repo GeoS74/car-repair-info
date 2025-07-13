@@ -14,7 +14,7 @@ module.exports = {
     password: process.env.DB_PASS || '',
     host: process.env.DB_HOST || '127.0.0.1',
     port: process.env.DB_PORT || 27017,
-    database: process.env.DB_NAME || 'car_repare',
+    database: process.env.DB_NAME || 'car_repair',
   },
   jwt: {
     check: process.env.JWT_CHECK === 'true',
