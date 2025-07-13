@@ -11,6 +11,23 @@ module.exports.objectId = async (ctx, next) => {
   await next();
 };
 
+module.exports.checkBodyParams = async (ctx, next) => {
+  if (!_checkEmail(ctx.request?.body?.email)) {
+    ctx.throw(400, 'invalid email');
+  }
+
+  if (!_checkName(ctx.request?.body?.name)) {
+    ctx.throw(400, 'invalid name');
+  }
+
+  ctx.user = {
+    email: ctx.request.body.email,
+    name: ctx.request?.body?.name || null,
+  };
+
+  await next();
+};
+
 module.exports.email = async (ctx, next) => {
   if (!_checkEmail(ctx?.user?.email)) {
     ctx.throw(400, 'invalid email');
