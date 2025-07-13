@@ -24,12 +24,12 @@ const Task = require('../models/Task');
   ])
     .then(() => logger.info('create and init collection "actions"'))
     .catch((error) => logger.warn(error.message));
-  
-    await Task.insertMany([
-      { title: 'Заказ-наряд' },
-    ])
-      .then(() => logger.info('create and init collection "tasks"'))
-      .catch((error) => logger.warn(error.message));
+
+  await Task.insertMany([
+    { title: 'Заказ-наряд' },
+  ])
+    .then(() => logger.info('create and init collection "tasks"'))
+    .catch((error) => logger.warn(error.message));
 
   await Status.insertMany([
     { title: 'Новая заявка', code: 10 },

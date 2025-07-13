@@ -20,9 +20,16 @@ module.exports.checkBodyParams = async (ctx, next) => {
     ctx.throw(400, 'invalid name');
   }
 
+  if (ctx.request?.body?.company) {
+    if (!_checkObjectId(ctx.request?.body?.company)) {
+      ctx.throw(400, 'invalid company');
+    }
+  }
+
   ctx.user = {
     email: ctx.request.body.email,
     name: ctx.request?.body?.name || null,
+    company: ctx.request?.body?.company || null,
   };
 
   await next();

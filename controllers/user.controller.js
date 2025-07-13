@@ -59,7 +59,8 @@ async function _searchUsers(data) {
         { path: 'directings.tasks.task' },
         { path: 'directings.tasks.actions' },
       ],
-    });
+    })
+    .populate('company');
 }
 
 /**
@@ -232,7 +233,6 @@ module.exports.photo = async (ctx) => {
 };
 
 function _getUserById(id) {
-
   return User.findById(id)
     .populate({
       path: 'roles',
@@ -241,7 +241,8 @@ function _getUserById(id) {
         { path: 'directings.tasks.task' },
         { path: 'directings.tasks.actions' },
       ],
-    });
+    })
+    .populate('company');
 }
 
 function _getUser({ email }) {
@@ -253,7 +254,8 @@ function _getUser({ email }) {
         { path: 'directings.tasks.task' },
         { path: 'directings.tasks.actions' },
       ],
-    });
+    })
+    .populate('company');
 }
 
 function _getAllUsers() {
@@ -265,20 +267,22 @@ function _getAllUsers() {
         { path: 'directings.tasks.task' },
         { path: 'directings.tasks.actions' },
       ],
-    });
+    })
+    .populate('company');
 }
 
-function _addUser({ email, name }) {
+function _addUser({ email, name, company }) {
   return User.create({
     email,
     name,
+    company,
   });
 }
 
-function _updateUser({ email, name }) {
+function _updateUser({ email, name, company }) {
   return User.findOneAndUpdate(
     { email },
-    { name },
+    { name, company },
     {
       new: true,
       runValidators: true, // запускает валидаторы схемы перед записью
@@ -291,7 +295,8 @@ function _updateUser({ email, name }) {
         { path: 'directings.tasks.task' },
         { path: 'directings.tasks.actions' },
       ],
-    });
+    })
+    .populate('company');
 }
 
 function _delUser({ email }) {
@@ -305,7 +310,8 @@ function _delUser({ email }) {
         { path: 'directings.tasks.task' },
         { path: 'directings.tasks.actions' },
       ],
-    });
+    })
+    .populate('company');
 }
 
 function _updatePhoto(email, photo) {
