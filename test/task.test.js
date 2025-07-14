@@ -10,6 +10,7 @@ const connection = require('../libs/connection');
 const logger = require('../libs/logger');
 const config = require('../config');
 const app = require('../app');
+const { responseProcessing, getJWTToken, getBody, getFakeObjectId } = require('./libs/testHelpers');
 
 // это универсальный тест для простых CRUD API
 // переопредели модель для тестов и название API
@@ -43,49 +44,41 @@ describe(`/test/${apiName}.test.js`, () => {
     // все роуты должны быть доступны при наличии access токена и только для админа
     it('check access token and check access only admin', async () => {
       let response = await fetch(apiPath)
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'если нет access токена сервер возвращает статус 401').to.be.equal(401);
       _expectErrorFieldState.call(this, response.data);
 
       response = await fetch(apiPath, {
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenNOTAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: {} })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
 
       expect(response.status, 'если нет access токена не админский сервер возвращает статус 403').to.be.equal(403);
       _expectErrorFieldState.call(this, response.data);
 
       response = await fetch(apiPath, {
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
     });
 
     it(`create ${apiName}`, async () => {
       let response = await fetch(apiPath, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
-        body: _getBadBody(),
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
+        body: getBody({ foo: 'foo' }),
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'поле title не передаётся сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
       response = await fetch(apiPath, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
-        body: _getDefaultBody(),
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
+        body: getBody({ title: 'foo' }),
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'сервер возвращает статус 201').to.be.equal(201);
       _expectFieldState.call(this, response.data);
     });
@@ -95,11 +88,9 @@ describe(`/test/${apiName}.test.js`, () => {
     it(`read ${apiName}`, async () => {
       let response = await fetch(apiPath, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
       _expectResponeArrayRows.call(this, response.data);
 
@@ -107,31 +98,25 @@ describe(`/test/${apiName}.test.js`, () => {
 
       response = await fetch(`${apiPath}/123`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запрашивается не валидный id сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`${apiPath}/${_getFakeId()}`, {
+      response = await fetch(`${apiPath}/${getFakeObjectId()}`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запрашивается не существующий id сервер возвращает статус 404').to.be.equal(404);
       _expectErrorFieldState.call(this, response.data);
 
       response = await fetch(`${apiPath}/${validId}`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запись найдена сервер возвращает статус 200').to.be.equal(200);
       _expectFieldState.call(this, response.data);
     });
@@ -139,32 +124,26 @@ describe(`/test/${apiName}.test.js`, () => {
     it(`search ${apiName}`, async () => {
       let response = await fetch(apiPath, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
 
       const validTitle = response.data[0].title;
 
       response = await fetch(`${apiPath}/?title=${validTitle}fake`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
 
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
       _expectResponeArrayRows.call(this, response.data);
 
       response = await fetch(`${apiPath}/?title=${validTitle}`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
 
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
       _expectResponeArrayRows.call(this, response.data);
@@ -173,44 +152,36 @@ describe(`/test/${apiName}.test.js`, () => {
     it(`update ${apiName}`, async () => {
       let response = await fetch(apiPath, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
 
       const validId = response.data[0].id;
 
       response = await fetch(`${apiPath}/123`, {
         method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
-        body: _getBadBody(),
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
+        body: getBody({ foo: 'foo' }),
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запрашивается не валидный id сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`${apiPath}/${_getFakeId()}`, {
+      response = await fetch(`${apiPath}/${getFakeObjectId()}`, {
         method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
-        body: _getBadBody(),
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
+        body: getBody({ foo: 'foo' }),
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запрашивается не существующий id сервер возвращает статус 404').to.be.equal(404);
       _expectErrorFieldState.call(this, response.data);
 
       response = await fetch(`${apiPath}/${validId}`, {
         method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
-        body: _getDefaultBody(),
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
+        body: getBody({ title: 'foo' }),
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запись обновляется сервер возвращает статус 200').to.be.equal(200);
       _expectFieldState.call(this, response.data);
     });
@@ -218,68 +189,46 @@ describe(`/test/${apiName}.test.js`, () => {
     it(`delete ${apiName}`, async () => {
       let response = await fetch(apiPath, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
 
       const validId = response.data[0].id;
 
       response = await fetch(`${apiPath}/123`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запрашивается не валидный id сервер возвращает статус 400').to.be.equal(400);
       _expectErrorFieldState.call(this, response.data);
 
-      response = await fetch(`${apiPath}/${_getFakeId()}`, {
+      response = await fetch(`${apiPath}/${getFakeObjectId()}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запрашивается не существующий id сервер возвращает статус 404').to.be.equal(404);
       _expectErrorFieldState.call(this, response.data);
 
       response = await fetch(`${apiPath}/${validId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запись удаляется сервер возвращает статус 200').to.be.equal(200);
       _expectFieldState.call(this, response.data);
 
       response = await fetch(`${apiPath}/${validId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'запрашивается id удалённой записи сервер возвращает статус 404').to.be.equal(404);
       _expectErrorFieldState.call(this, response.data);
     });
   });
 });
-
-async function _getData(response) {
-  const data = await response.json();
-  return {
-    status: response.status,
-    data,
-  };
-}
-
-function _getFakeId() {
-  return mongoose.Types.ObjectId().toString();
-}
 
 function _expectResponeArrayRows(data) {
   expect(data, 'сервер возвращает массив')
@@ -301,36 +250,4 @@ function _expectErrorFieldState(data) {
   expect(data, 'сервер возвращает объект с описанием ошибки')
     .that.is.an('object')
     .to.have.property('error');
-}
-
-function _getAccessTokenNOTAdmin() {
-  return jwt.sign(
-    { user: {} },
-    config.jwt.secretKey,
-    { expiresIn: 1800 },
-  );
-}
-
-function _getAccessTokenAdmin() {
-  return jwt.sign(
-    {
-      user: {
-        rank: 'admin',
-      },
-    },
-    config.jwt.secretKey,
-    { expiresIn: 1800 },
-  );
-}
-
-function _getDefaultBody() {
-  const fd = new FormData();
-  fd.append('title', 'foo');
-  return fd;
-}
-
-function _getBadBody() {
-  const fd = new FormData();
-  fd.append('foo', 'foo');
-  return fd;
 }

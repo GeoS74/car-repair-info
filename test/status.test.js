@@ -1,15 +1,11 @@
 const { expect } = require('chai');
 const fetch = require('node-fetch');
-const fs = require('fs/promises');
-const path = require('path');
-const FormData = require('form-data');
-const jwt = require('jsonwebtoken');
 require('dotenv').config({ path: '../secrets.env' });
-const mongoose = require('mongoose');
 const connection = require('../libs/connection');
 const logger = require('../libs/logger');
 const config = require('../config');
 const app = require('../app');
+const { responseProcessing, getJWTToken, getBody, getFakeObjectId } = require('./libs/testHelpers');
 
 // переопредели модель для тестов и название API
 const Model = require('../models/Status');
@@ -41,46 +37,36 @@ describe(`/test/${apiName}.test.js`, () => {
     it(`read ${apiName}`, async () => {
       let response = await fetch(apiPath, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
       _expectResponeArrayRows.call(this, response.data);
-
-      const validId = response.data[0].id;
     });
 
     it(`search ${apiName}`, async () => {
       let response = await fetch(apiPath, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
 
       const validTitle = response.data[0].title;
 
       response = await fetch(`${apiPath}/?title=${validTitle}fake`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
 
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
       _expectResponeArrayRows.call(this, response.data);
 
       response = await fetch(`${apiPath}/?title=${validTitle}`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${_getAccessTokenAdmin()}`,
-        },
+        headers: { Authorization: `Bearer ${getJWTToken({ user: { rank: 'admin' } })}` },
       })
-        .then(_getData);
+        .then(responseProcessing);
 
       expect(response.status, 'сервер возвращает статус 200').to.be.equal(200);
       _expectResponeArrayRows.call(this, response.data);
@@ -88,14 +74,6 @@ describe(`/test/${apiName}.test.js`, () => {
 
   });
 });
-
-async function _getData(response) {
-  const data = await response.json();
-  return {
-    status: response.status,
-    data,
-  };
-}
 
 function _expectResponeArrayRows(data) {
   expect(data, 'сервер возвращает массив')
@@ -105,24 +83,4 @@ function _expectResponeArrayRows(data) {
     expect(e, 'сервер возвращает массив объектов с полями id, title')
       .to.have.keys(['code', 'title']);
   }
-}
-
-function _getAccessTokenNOTAdmin() {
-  return jwt.sign(
-    { user: {} },
-    config.jwt.secretKey,
-    { expiresIn: 1800 },
-  );
-}
-
-function _getAccessTokenAdmin() {
-  return jwt.sign(
-    {
-      user: {
-        rank: 'admin',
-      },
-    },
-    config.jwt.secretKey,
-    { expiresIn: 1800 },
-  );
 }

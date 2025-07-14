@@ -22,7 +22,7 @@ if (config.node.env === 'dev') {
   app.use(cors());
 }
 
-app.use(userRoutes.routes); // ...test dev
+app.use(userRoutes.routes); // test ok
 app.use(userRoutes.static); // no test
 app.use(roleRoutes); // test ok
 app.use(directingRoutes); // test ok
