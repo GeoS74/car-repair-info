@@ -92,7 +92,7 @@ module.exports.photo = async (ctx, next) => {
 };
 
 function _checkEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   // return !!email;
 }
 

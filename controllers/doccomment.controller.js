@@ -1,8 +1,9 @@
-// const fs = require('fs/promises');
-// const path = require('path');
+const fs = require('fs/promises');
+const path = require('path');
 const Comment = require('../models/Comment');
+const Doc = require('../models/Doc');
 const mapper = require('../mappers/doccomment.mapper');
-// const logger = require('../libs/logger');
+const logger = require('../libs/logger');
 const controllerUser = require('./user.controller');
 
 module.exports.getMe = async (ctx, next) => {
@@ -14,16 +15,30 @@ module.exports.getMe = async (ctx, next) => {
 };
 
 module.exports.add = async (ctx) => {
-  // ctx.request.body.files = await _processingScans(ctx.scans);
+  ctx.request.body.files = await _processingScans(ctx.scans);
 
   const comment = await _addComment({
     ...ctx.request.body,
     author: ctx.user.uid,
   });
 
+  await _linkFilesToDoc(ctx.request.body);
+
   ctx.status = 201;
   ctx.body = mapper(comment);
 };
+
+function _linkFilesToDoc({ docId, files }) {
+  if (files.length) {
+    return Doc.findByIdAndUpdate(
+      docId,
+      {
+        $push: { files },
+      },
+    );
+  }
+  return false;
+}
 
 function _addComment({
   comment,
@@ -54,16 +69,16 @@ async function _searchComment(docId) {
     .populate('author');
 }
 
-// async function _processingScans(scans) {
-//   const res = [];
-//   for (const scan of scans) {
-//     await fs.rename(scan.filepath, path.join(__dirname, `../files/scan/${scan.newFilename}`))
-//       .catch((error) => logger.error(error.mesasge));
+async function _processingScans(scans) {
+  const res = [];
+  for (const scan of scans) {
+    await fs.rename(scan.filepath, path.join(__dirname, `../files/scan/${scan.newFilename}`))
+      .catch((error) => logger.error(error.mesasge));
 
-//     res.push({
-//       originalName: scan.originalFilename,
-//       fileName: scan.newFilename,
-//     });
-//   }
-//   return res;
-// }
+    res.push({
+      originalName: scan.originalFilename,
+      fileName: scan.newFilename,
+    });
+  }
+  return res;
+}

@@ -56,6 +56,8 @@ router.post(
   validator.comment,
   validator.objectIdByBody,
   validator.checkParentDoc,
+  validator.scanCopy,
+  validator.commentsNotBeEmpty,
 
   controller.add,
 );

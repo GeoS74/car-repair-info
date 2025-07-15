@@ -3,13 +3,11 @@ const mongoose = require('mongoose');
 const FormData = require('form-data');
 const config = require('../../config');
 
-module.exports.getJWTToken = (payload) => {
-  return jwt.sign(
-    payload,
-    config.jwt.secretKey,
-    { expiresIn: 1800 },
-  );
-}
+module.exports.getJWTToken = (payload) => jwt.sign(
+  payload,
+  config.jwt.secretKey,
+  { expiresIn: 1800 },
+);
 
 module.exports.responseProcessing = async (response) => {
   const data = await response.json();
@@ -17,15 +15,11 @@ module.exports.responseProcessing = async (response) => {
     status: response.status,
     data,
   };
-}
+};
 
-module.exports.checkObjectId = (id) => {
-  return mongoose.isValidObjectId(id);
-}
+module.exports.checkObjectId = (id) => mongoose.isValidObjectId(id);
 
-module.exports.getFakeObjectId = () => {
-  return mongoose.Types.ObjectId().toString();
-}
+module.exports.getFakeObjectId = () => mongoose.Types.ObjectId().toString();
 
 module.exports.getBody = (obj) => {
   const fd = new FormData();
@@ -33,4 +27,4 @@ module.exports.getBody = (obj) => {
     fd.append(key, obj[key]);
   }
   return fd;
-}
+};

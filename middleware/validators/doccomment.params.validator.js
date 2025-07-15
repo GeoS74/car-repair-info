@@ -23,6 +23,7 @@ module.exports.checkParentDoc = async (ctx, next) => {
 };
 
 module.exports.comment = async (ctx, next) => {
+  ctx.request.body.comment = ctx.request.body?.comment?.trim();
   await next();
 };
 
@@ -43,6 +44,53 @@ module.exports.objectIdByQuery = async (ctx, next) => {
 
   await next();
 };
+
+module.exports.scanCopy = async (ctx, next) => {
+  if (Object.keys(ctx.request.files).indexOf('scans') === -1) {
+    _deleteFile(ctx.request.files);
+    ctx.scans = [];
+    await next();
+    return;
+  }
+
+  const files = Array.isArray(ctx.request.files.scans)
+    ? ctx.request.files.scans : [ctx.request.files.scans];
+
+  for (const file of files) {
+    if (!_checkMimeType(file.mimetype)) {
+      _deleteFile(ctx.request.files);
+      ctx.throw(400, 'bad mime type');
+      return;
+    }
+  }
+
+  ctx.scans = files;
+
+  await next();
+};
+
+module.exports.commentsNotBeEmpty = async (ctx, next) => {
+  if (!ctx.scans.length && !ctx.request.body.comment) {
+    ctx.throw(400, 'comment not be empty');
+  }
+  await next();
+};
+
+function _checkMimeType(mimeType) {
+  // if (/^image\/\w+/.test(mimeType)) {
+  //   return true;
+  // }
+  if (/^application\/pdf/.test(mimeType)) {
+    return true;
+  }
+  // if (/^application\/vnd\.\w+/.test(mimeType)) {
+  //   return true;
+  // }
+  // if (/^application\/msword/.test(mimeType)) {
+  //   return true;
+  // }
+  return false;
+}
 
 function _checkObjectId(id) {
   return isValidObjectId(id);
