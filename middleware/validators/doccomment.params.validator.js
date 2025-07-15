@@ -77,18 +77,18 @@ module.exports.commentsNotBeEmpty = async (ctx, next) => {
 };
 
 function _checkMimeType(mimeType) {
-  // if (/^image\/\w+/.test(mimeType)) {
-  //   return true;
-  // }
+  if (/^image\/\w+/.test(mimeType)) {
+    return true;
+  }
   if (/^application\/pdf/.test(mimeType)) {
     return true;
   }
-  // if (/^application\/vnd\.\w+/.test(mimeType)) {
-  //   return true;
-  // }
-  // if (/^application\/msword/.test(mimeType)) {
-  //   return true;
-  // }
+  if (/^application\/vnd\.\w+/.test(mimeType)) {
+    return true;
+  }
+  if (/^application\/msword/.test(mimeType)) {
+    return true;
+  }
   return false;
 }
 
