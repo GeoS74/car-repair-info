@@ -50,7 +50,7 @@ module.exports.search = async (ctx) => {
 
 async function _searchUsers(data) {
   return User.find(data.filter)
-    .sort({ _id: 1 })
+    .sort({ _id: -1 })
     .limit(data.limit)
     .populate({
       path: 'roles',
