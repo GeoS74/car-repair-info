@@ -167,6 +167,7 @@ module.exports.startChildProcess = async (ctx) => {
       './child_process/upload.excel.process',
       {
         env: {
+          ...process.env,
           data: JSON.stringify({
             structure: ctx.structure,
             filePath: ctx.request.files.carsListFile.filepath,

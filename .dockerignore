@@ -3,9 +3,13 @@
 /files
 /log
 /node_modules
+/test
+.git
+.dockerignore
+.eslintrc.js
+.gitignore
+CHECKLIST.md
+docker-compose.yml
 Dockerfile
 Makefile
-.dockerignore
-.git
-.gitignore
 secret.env

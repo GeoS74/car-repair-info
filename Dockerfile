@@ -1,6 +1,6 @@
 FROM node
 
-WORKDIR /informator
+WORKDIR /car-repair-info
 
 COPY package.json .
 
