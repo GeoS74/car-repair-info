@@ -121,6 +121,15 @@ module.exports.title = async (ctx, next) => {
   await next();
 };
 
+module.exports.mileage = async (ctx, next) => {
+  if (!_checkTitle(ctx.request?.body?.mileage)) {
+    _deleteFile(ctx.request.files);
+    ctx.throw(400, 'invalid mileage');
+  }
+
+  await next();
+};
+
 module.exports.objectId = async (ctx, next) => {
   if (!_checkObjectId(ctx.params.id)) {
     _deleteFile(ctx.request.files);
@@ -177,6 +186,15 @@ module.exports.scanCopy = async (ctx, next) => {
   }
 
   ctx.scans = files;
+
+  await next();
+};
+
+module.exports.scanCopyNotBeEmpty = async (ctx, next) => {
+  if (!ctx.scans.length) {
+    _deleteFile(ctx.request.files);
+    ctx.throw(400, 'scans not be empty title');
+  }
 
   await next();
 };

@@ -51,4 +51,5 @@ module.exports = (data) => ({
     place: data.car.place || '',
     yearProduction: data.car.yearProduction || '',
   },
+  mileage: data.mileage,
 });

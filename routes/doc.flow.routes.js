@@ -95,11 +95,13 @@ router.post(
   validator.checkRightOnCreate,
 
   validator.title,
+  validator.mileage,
   validator.checkStatusCode,
   validator.checkCarId,
   validator.acceptor,
   validator.recipient,
   validator.scanCopy,
+  validator.scanCopyNotBeEmpty,
 
   controller.add,
 );

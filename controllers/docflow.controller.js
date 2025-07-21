@@ -151,6 +151,7 @@ function _addDoc({
   sum,
   statusCode,
   carId,
+  mileage,
 }) {
   return Doc.create({
     title,
@@ -165,6 +166,7 @@ function _addDoc({
     sum,
     statusCode,
     car: carId || undefined,
+    mileage,
   })
     .then((doc) => Doc.findById(doc._id)
       .populate('acceptor.user')
