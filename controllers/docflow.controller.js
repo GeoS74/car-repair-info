@@ -1,4 +1,5 @@
 const fs = require('fs/promises');
+const mongoose = require('mongoose');
 const path = require('path');
 const Doc = require('../models/Doc');
 const Comment = require('../models/Comment');
@@ -433,6 +434,206 @@ function _makeFilterRules({
 
   return { filter, projection, limit };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+module.exports.searchByDocAndCar = async (ctx) => {
+  // _makePipeline выбрасывает исключение
+  // поэтому добавлен блок try...catch
+  try {
+    const pipeline = _makePipeline({
+      ...ctx.query,
+      accessDocTypes: ctx.accessDocTypes,
+      user: ctx.user.uid,
+    });
+    const docs = await _searchByDocAndCar(pipeline);
+
+    ctx.body = docs;
+    // ctx.body = docs.map((doc) => (mapper(doc)));
+  } catch (error) {
+    ctx.body = [];
+  }
+
+  ctx.status = 200;
+};
+
+
+function _makePipeline({
+  search,
+  lastId,
+  limit,
+  user,
+  // acceptor,
+  // recipient,
+  author,
+  directingId,
+  taskId,
+  accessDocTypes,
+  statusCode,
+}) {
+  const pipeline = [];
+
+  if (!accessDocTypes.length) {
+    throw new Error();
+  }
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'cars',
+        let: { carId: '$car' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$_id', '$$carId'] } } }
+        ],
+        as: 'car' // Можно использовать единственное число при таком подходе
+      }
+    },
+    {
+      $addFields: {
+        car: { $arrayElemAt: ['$car', 0] } // Преобразуем массив в объект
+      }
+    },
+  );
+
+  const matchRules = {
+    $match: { $and: [] }
+  };
+
+  matchRules.$match.$and.push({
+    $or: accessDocTypes.map((e) => ({
+      $and: [
+        { directing: new mongoose.Types.ObjectId(e[0]) },
+        { task: new mongoose.Types.ObjectId(e[1]) },
+      ],
+    }))
+  });
+
+  if (search) {
+    matchRules.$match.$and.push({
+      $or: [
+        { 'title': { $regex: search, $options: 'i' } },
+        { 'car.carModel': { $regex: search, $options: 'i' } },
+        { 'car.vin': { $regex: search, $options: 'i' } },
+      ],
+    })
+  }
+
+  if (directingId) {
+    matchRules.$match.$and.push({ directing: new mongoose.Types.ObjectId(directingId) });
+  }
+
+  if (taskId) {
+    matchRules.$match.$and.push({ task: new mongoose.Types.ObjectId(taskId) });
+  }
+
+  if (lastId) {
+    matchRules.$match.$and.push({ _id: { $lt: new mongoose.Types.ObjectId(lastId) } });
+  }
+
+  if (statusCode) {
+    matchRules.$match.$and.push({ statusCode: statusCode });
+  }
+
+  if (author === '1') {
+    matchRules.$match.$and.push({ author: new mongoose.Types.ObjectId(user) })
+  }
+
+  if (matchRules.$match.$and.length) {
+    pipeline.push(matchRules)
+  }
+
+
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'users',
+        let: { authorId: '$author' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$_id', '$$authorId'] } } }
+        ],
+        as: 'author' // Можно использовать единственное число при таком подходе
+      }
+    },
+    {
+      $addFields: {
+        author: { $arrayElemAt: ['$author', 0] } // Преобразуем массив в объект
+      }
+    },
+    {
+      $lookup: {
+        from: 'tasks',
+        let: { taskId: '$task' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$_id', '$$taskId'] } } }
+        ],
+        as: 'task' // Можно использовать единственное число при таком подходе
+      }
+    },
+    {
+      $addFields: {
+        task: { $arrayElemAt: ['$task', 0] } // Преобразуем массив в объект
+      }
+    },
+    {
+      $lookup: {
+        from: 'directings',
+        let: { directingId: '$directing' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$_id', '$$directingId'] } } }
+        ],
+        as: 'directing' // Можно использовать единственное число при таком подходе
+      }
+    },
+    {
+      $addFields: {
+        directing: { $arrayElemAt: ['$directing', 0] } // Преобразуем массив в объект
+      }
+    },
+  );
+
+
+
+
+
+  pipeline.push({ $sort: { _id: -1 } });
+
+  if (limit) {
+    pipeline.push({ $limit: limit });
+  }
+
+  return pipeline;
+}
+
+async function _searchByDocAndCar(pipeline) {
+  return Doc.aggregate(pipeline);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * подписание/ознакомление документов

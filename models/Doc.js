@@ -87,4 +87,9 @@ Schema.pre('save', async function _(next) {
   next();
 });
 
+// DocSchema.index({ car: 1 }); // индекс для поиска по автомобилю
+// DocSchema.index({ directing: 1 }); // уже есть
+// DocSchema.index({ task: 1 }); // уже есть
+// DocSchema.index({ createdAt: -1 }); // для сортировки по дате создания
+
 module.exports = connection.model('Doc', Schema);

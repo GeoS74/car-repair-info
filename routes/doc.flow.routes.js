@@ -79,6 +79,18 @@ router.get(
 );
 
 router.get(
+  '/search/doccar',
+  validatorSearch.searchString,
+  validatorSearch.lastId,
+  validatorSearch.limit,
+  validatorSearch.directingId,
+  validatorSearch.tascId,
+  validatorSearch.statusCode,
+
+  controller.searchByDocAndCar,
+);
+
+router.get(
   '/:id',
   validator.objectId,
   validator.checkAccessDocTypesById,

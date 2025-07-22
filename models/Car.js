@@ -40,4 +40,14 @@ Schema.index(
 // и поиска по регулярному выражению
 Schema.index({ vin: 1 });
 
+
+// CarSchema.index({ carModel: 'text' }); // текстовый индекс для поиска по модели
+// CarSchema.index({ vin: 1 }); // уже есть уникальный индекс
+// CarSchema.index({ stateNumber: 1 }); // уже есть уникальный индекс
+// CarSchema.index({ 
+//   carModel: 1,
+//   vin: 1,
+//   stateNumber: 1 
+// }); // составной индекс
+
 module.exports = connection.model('Car', Schema);
