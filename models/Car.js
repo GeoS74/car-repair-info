@@ -38,10 +38,9 @@ Schema.index(
 // ИЛИ по регулярному выражению по полю 'vin'
 // это индекс нужен для возможности объединения полнотекстового поиска
 // и поиска по регулярному выражению
+Schema.index({ carModel: 1, vin: 1 });
+Schema.index({ carModel: 1 }); // текстовый индекс для поиска по модели
 Schema.index({ vin: 1 });
-
-
-// CarSchema.index({ carModel: 'text' }); // текстовый индекс для поиска по модели
 // CarSchema.index({ vin: 1 }); // уже есть уникальный индекс
 // CarSchema.index({ stateNumber: 1 }); // уже есть уникальный индекс
 // CarSchema.index({ 

@@ -34,13 +34,13 @@ const Schema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: Directing,
     required: 'не заполнено обязательное поле {PATH}',
-    index: true,
+    // index: true,
   },
   task: {
     type: mongoose.Schema.Types.ObjectId,
     ref: Task,
     required: 'не заполнено обязательное поле {PATH}',
-    index: true,
+    // index: true,
   },
   author: {
     type: mongoose.Schema.Types.ObjectId,
@@ -87,9 +87,14 @@ Schema.pre('save', async function _(next) {
   next();
 });
 
-// DocSchema.index({ car: 1 }); // индекс для поиска по автомобилю
-// DocSchema.index({ directing: 1 }); // уже есть
-// DocSchema.index({ task: 1 }); // уже есть
+Schema.index({ statusCode: 1, directing: 1, task: 1 }); // уже есть
+Schema.index({ directing: 1, task: 1 }); // уже есть
+Schema.index({ directing: 1 }); // уже есть
+Schema.index({ task: 1 }); // уже есть
+Schema.index({ statusCode: 1 }); // уже есть
+Schema.index({ author: 1 }); // уже есть
+Schema.index({ title: 1 }); // уже есть
+Schema.index({ car: 1 }); // индекс для поиска по автомобилю
 // DocSchema.index({ createdAt: -1 }); // для сортировки по дате создания
 
 module.exports = connection.model('Doc', Schema);

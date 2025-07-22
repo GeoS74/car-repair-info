@@ -341,11 +341,7 @@ async function _searchDoc(data) {
 }
 
 async function _searchDocCount(data) {
-  return Doc.find(data.filter)
-    .sort({
-      _id: -1,
-    })
-    .count();
+  return Doc.find(data.filter).count();
 }
 
 function _makeFilterRules({
@@ -370,12 +366,16 @@ function _makeFilterRules({
 
   // кол-во условий 'и' пропорционально кол-ву доступных типов док-тов для пользователя
   // использование условия тестировалось на 5 млн. записях
+  // filter.$or = accessDocTypes.map((e) => ({
+  //   $and: [
+  //     { directing: e[0] },
+  //     { task: e[1] },
+  //   ],
+  // }));
   filter.$or = accessDocTypes.map((e) => ({
-    $and: [
-      { directing: e[0] },
-      { task: e[1] },
-    ],
-  }));
+    directing: e[0],
+    task: e[1]
+    }));
 
   if (directingId) {
     filter.directing = directingId;
@@ -465,6 +465,164 @@ module.exports.searchByDocAndCar = async (ctx) => {
 };
 
 
+// function _makePipeline({
+//   search,
+//   lastId,
+//   limit,
+//   user,
+//   // acceptor,
+//   // recipient,
+//   author,
+//   directingId,
+//   taskId,
+//   accessDocTypes,
+//   statusCode,
+// }) {
+//   const pipeline = [];
+
+//   if (!accessDocTypes.length) {
+//     throw new Error();
+//   }
+
+//   pipeline.push(
+//     {
+//       $lookup: {
+//         from: 'cars',
+//         let: { carId: '$car' },
+//         pipeline: [
+//           { $match: { $expr: { $eq: ['$_id', '$$carId'] } } }
+//         ],
+//         as: 'car' // Можно использовать единственное число при таком подходе
+//       }
+//     },
+//     {
+//       $addFields: {
+//         car: { $arrayElemAt: ['$car', 0] } // Преобразуем массив в объект
+//       }
+//     },
+//   );
+
+//   const matchRules = {
+//     $match: { $and: [] }
+//   };
+
+//   // matchRules.$match.$and.push({
+//   //   $or: accessDocTypes.map((e) => ({
+//   //     $and: [
+//   //       { directing: new mongoose.Types.ObjectId(e[0]) },
+//   //       { task: new mongoose.Types.ObjectId(e[1]) },
+//   //     ],
+//   //   }))
+//   // });
+
+//   matchRules.$match.$and.push({
+//     $or: accessDocTypes.map((e) => ({
+//       directing: new mongoose.Types.ObjectId(e[0]),
+//       task: new mongoose.Types.ObjectId(e[1])
+//     }))
+//   });
+
+//   if (search) {
+//     matchRules.$match.$and.push({
+//       $or: [
+//         { 'title': { $regex: search, $options: 'i' } },
+//         { 'car.carModel': { $regex: search, $options: 'i' } },
+//         { 'car.vin': { $regex: search, $options: 'i' } },
+//       ],
+//     })
+//   }
+
+//   if (directingId) {
+//     matchRules.$match.$and.push({ directing: new mongoose.Types.ObjectId(directingId) });
+//   }
+
+//   if (taskId) {
+//     matchRules.$match.$and.push({ task: new mongoose.Types.ObjectId(taskId) });
+//   }
+
+//   if (lastId) {
+//     matchRules.$match.$and.push({ _id: { $lt: new mongoose.Types.ObjectId(lastId) } });
+//   }
+
+//   if (statusCode) {
+//     matchRules.$match.$and.push({ statusCode: statusCode });
+//   }
+
+//   if (author === '1') {
+//     matchRules.$match.$and.push({ author: new mongoose.Types.ObjectId(user) })
+//   }
+
+//   if (matchRules.$match.$and.length) {
+//     pipeline.push(matchRules)
+//   }
+
+
+
+//   pipeline.push(
+//     {
+//       $lookup: {
+//         from: 'users',
+//         let: { authorId: '$author' },
+//         pipeline: [
+//           { $match: { $expr: { $eq: ['$_id', '$$authorId'] } } }
+//         ],
+//         as: 'author' // Можно использовать единственное число при таком подходе
+//       }
+//     },
+//     {
+//       $addFields: {
+//         author: { $arrayElemAt: ['$author', 0] } // Преобразуем массив в объект
+//       }
+//     },
+//     {
+//       $lookup: {
+//         from: 'tasks',
+//         let: { taskId: '$task' },
+//         pipeline: [
+//           { $match: { $expr: { $eq: ['$_id', '$$taskId'] } } }
+//         ],
+//         as: 'task' // Можно использовать единственное число при таком подходе
+//       }
+//     },
+//     {
+//       $addFields: {
+//         task: { $arrayElemAt: ['$task', 0] } // Преобразуем массив в объект
+//       }
+//     },
+//     {
+//       $lookup: {
+//         from: 'directings',
+//         let: { directingId: '$directing' },
+//         pipeline: [
+//           { $match: { $expr: { $eq: ['$_id', '$$directingId'] } } }
+//         ],
+//         as: 'directing' // Можно использовать единственное число при таком подходе
+//       }
+//     },
+//     {
+//       $addFields: {
+//         directing: { $arrayElemAt: ['$directing', 0] } // Преобразуем массив в объект
+//       }
+//     },
+//   );
+
+
+
+
+
+//   pipeline.push({ $sort: { _id: -1 } });
+
+//   if (limit) {
+//     pipeline.push({ $limit: limit });
+//   }
+
+//   return pipeline;
+// }
+
+async function _searchByDocAndCar(pipeline) {
+  return Doc.aggregate(pipeline);
+}
+
 function _makePipeline({
   search,
   lastId,
@@ -483,37 +641,100 @@ function _makePipeline({
   if (!accessDocTypes.length) {
     throw new Error();
   }
+ 
+
+  // STAGE 1
+  const matchRulesStage1 = {
+    $match: { $and: [] }
+  };
+
+  // if (search) {
+  //   matchRulesStage1.$match.$and.push({ 'title': { $regex: search, $options: 'i' } });
+  // }
+
+  matchRulesStage1.$match.$and.push({
+    $or: accessDocTypes.map((e) => ({
+      directing: new mongoose.Types.ObjectId(e[0]),
+      task: new mongoose.Types.ObjectId(e[1])
+    }))
+  });
+
+  if (statusCode) {
+    matchRulesStage1.$match.$and.push({ statusCode: statusCode });
+  }
+
+  
+
+
+  if (directingId) {
+    matchRulesStage1.$match.$and.push({ directing: new mongoose.Types.ObjectId(directingId) });
+  }
+
+  if (taskId) {
+    matchRulesStage1.$match.$and.push({ task: new mongoose.Types.ObjectId(taskId) });
+  }
+
+  if (lastId) {
+    matchRulesStage1.$match.$and.push({ _id: { $lt: new mongoose.Types.ObjectId(lastId) } });
+  }
+
+ 
+
+  if (author === '1') {
+    matchRulesStage1.$match.$and.push({ author: new mongoose.Types.ObjectId(user) })
+  }
+
+
+
+  if (matchRulesStage1.$match.$and.length) {
+    pipeline.push(matchRulesStage1)
+  }
+
+  if (limit) {
+    pipeline.push({ $limit: limit });
+  }
 
   pipeline.push(
     {
       $lookup: {
         from: 'cars',
-        let: { carId: '$car' },
-        pipeline: [
-          { $match: { $expr: { $eq: ['$_id', '$$carId'] } } }
-        ],
+        localField: 'car',
+        foreignField: '_id',
         as: 'car' // Можно использовать единственное число при таком подходе
       }
     },
-    {
-      $addFields: {
-        car: { $arrayElemAt: ['$car', 0] } // Преобразуем массив в объект
-      }
-    },
+    {$unwind: '$car' },
   );
+ 
+
+  // pipeline.push(
+  //   {
+  //     $lookup: {
+  //       from: 'cars',
+  //       let: { carId: '$car' },
+  //       pipeline: [
+  //         { $match: { $expr: { $eq: ['$_id', '$$carId'] } } }
+  //       ],
+  //       as: 'car' // Можно использовать единственное число при таком подходе
+  //     }
+  //   },
+  //   {
+  //     $addFields: {
+  //       car: { $arrayElemAt: ['$car', 0] } // Преобразуем массив в объект
+  //     }
+  //   },
+  // );
 
   const matchRules = {
     $match: { $and: [] }
   };
 
-  matchRules.$match.$and.push({
-    $or: accessDocTypes.map((e) => ({
-      $and: [
-        { directing: new mongoose.Types.ObjectId(e[0]) },
-        { task: new mongoose.Types.ObjectId(e[1]) },
-      ],
-    }))
-  });
+  // matchRules.$match.$and.push({
+  //   $or: accessDocTypes.map((e) => ({
+  //     directing: new mongoose.Types.ObjectId(e[0]),
+  //     task: new mongoose.Types.ObjectId(e[1])
+  //   }))
+  // });
 
   if (search) {
     matchRules.$match.$and.push({
@@ -525,25 +746,7 @@ function _makePipeline({
     })
   }
 
-  if (directingId) {
-    matchRules.$match.$and.push({ directing: new mongoose.Types.ObjectId(directingId) });
-  }
-
-  if (taskId) {
-    matchRules.$match.$and.push({ task: new mongoose.Types.ObjectId(taskId) });
-  }
-
-  if (lastId) {
-    matchRules.$match.$and.push({ _id: { $lt: new mongoose.Types.ObjectId(lastId) } });
-  }
-
-  if (statusCode) {
-    matchRules.$match.$and.push({ statusCode: statusCode });
-  }
-
-  if (author === '1') {
-    matchRules.$match.$and.push({ author: new mongoose.Types.ObjectId(user) })
-  }
+  
 
   if (matchRules.$match.$and.length) {
     pipeline.push(matchRules)
@@ -605,17 +808,10 @@ function _makePipeline({
 
   pipeline.push({ $sort: { _id: -1 } });
 
-  if (limit) {
-    pipeline.push({ $limit: limit });
-  }
+  
 
   return pipeline;
 }
-
-async function _searchByDocAndCar(pipeline) {
-  return Doc.aggregate(pipeline);
-}
-
 
 
 
