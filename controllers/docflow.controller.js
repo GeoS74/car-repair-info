@@ -444,9 +444,6 @@ function _makeFilterRules({
 
 
 
-
-
-
 module.exports.searchByDocAndCar = async (ctx) => {
   // _makePipeline выбрасывает исключение
   // поэтому добавлен блок try...catch
