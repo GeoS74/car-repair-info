@@ -690,9 +690,9 @@ function _makePipeline({
     pipeline.push(matchRulesStage1)
   }
 
-  if (limit) {
-    pipeline.push({ $limit: limit });
-  }
+   
+ 
+ 
 
   pipeline.push(
     {
@@ -724,6 +724,8 @@ function _makePipeline({
   //     }
   //   },
   // );
+ 
+ 
 
   const matchRules = {
     $match: { $and: [] }
@@ -746,12 +748,16 @@ function _makePipeline({
     })
   }
 
-  
-
   if (matchRules.$match.$and.length) {
     pipeline.push(matchRules)
   }
 
+  if (limit) {
+    pipeline.push({ $limit: limit });
+  }
+ 
+
+ 
 
 
   pipeline.push(
