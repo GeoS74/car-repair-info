@@ -11,18 +11,17 @@ module.exports.lastId = async (ctx, next) => {
     if (!isValidObjectId(ctx.query.last)) {
       ctx.throw(400, 'invalid last id');
     }
+    ctx.query.lastId = ctx.query.last;
   }
-
-  ctx.query.lastId = ctx.query.last;
 
   await next();
 };
 
 module.exports.limit = async (ctx, next) => {
-  const defaultLimit = 25;
+  const defaultLimit = 50;
 
   ctx.query.limit = parseInt(ctx.query.limit, 10) || defaultLimit;
-  if (ctx.query.limit > 100) {
+  if (ctx.query.limit > defaultLimit) {
     ctx.query.limit = defaultLimit;
   }
 
@@ -34,21 +33,19 @@ module.exports.directingId = async (ctx, next) => {
     if (!isValidObjectId(ctx.query.directing)) {
       ctx.throw(400, 'invalid directing id');
     }
+    ctx.query.directingId = ctx.query.directing;
   }
-
-  ctx.query.directingId = ctx.query.directing;
 
   await next();
 };
 
-module.exports.tascId = async (ctx, next) => {
+module.exports.taskId = async (ctx, next) => {
   if (ctx.query.task) {
     if (!isValidObjectId(ctx.query.task)) {
       ctx.throw(400, 'invalid task id');
     }
+    ctx.query.taskId = ctx.query.task;
   }
-
-  ctx.query.taskId = ctx.query.task;
 
   await next();
 };

@@ -60,7 +60,7 @@ router.get(
   validatorSearch.lastId,
   validatorSearch.limit,
   validatorSearch.directingId,
-  validatorSearch.tascId,
+  validatorSearch.taskId,
   validatorSearch.statusCode,
 
   controller.search,
@@ -72,7 +72,7 @@ router.get(
   validatorSearch.lastId,
   validatorSearch.limit,
   validatorSearch.directingId,
-  validatorSearch.tascId,
+  validatorSearch.taskId,
   validatorSearch.statusCode,
 
   controller.searchCount,
@@ -84,7 +84,7 @@ router.get(
   validatorSearch.lastId,
   validatorSearch.limit,
   validatorSearch.directingId,
-  validatorSearch.tascId,
+  validatorSearch.taskId,
   validatorSearch.statusCode,
 
   controller.searchByDocAndCar,

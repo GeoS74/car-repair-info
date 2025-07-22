@@ -1,4 +1,4 @@
 module.exports = (data) => ({
-  id: data.id,
+  id: data._id,
   title: data.title,
 });

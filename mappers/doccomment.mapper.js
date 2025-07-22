@@ -1,5 +1,5 @@
 module.exports = (data) => ({
-  id: data.id,
+  id: data._id,
   comment: data.comment,
 
   author: {

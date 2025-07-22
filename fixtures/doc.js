@@ -12,7 +12,7 @@ const logger = require('../libs/logger')
 
     await clearDocs();
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 1000000; i++) {
       const user = users[random(0, users.length)];
       const car = cars[random(0, cars.length)];
       const status = statuses[random(0, statuses.length)];
@@ -26,11 +26,11 @@ const logger = require('../libs/logger')
         car: car.id,
       });
 
-      //   if(arr.length === 50) {
-      //     await insertDocs(arr);
-      //     arr.length = 0;
-      //     logger.info(`writed ${i + 1} rows`)
-      //   }
+        if(arr.length === 50) {
+          await insertDocs(arr);
+          arr.length = 0;
+          logger.info(`writed ${i + 1} rows`)
+        }
     }
 
     if(arr.length) {

@@ -1,6 +1,6 @@
 module.exports = (data) => {
   const company = data.company ? {
-    id: data.company.id,
+    id: data.company._id,
     title: data.company.title,
   } : {};
 

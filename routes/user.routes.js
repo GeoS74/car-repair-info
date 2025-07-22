@@ -50,7 +50,7 @@ router.get(
   validatorSearch.lastId,
   validatorSearch.limit,
   validatorSearch.directingId,
-  validatorSearch.tascId,
+  validatorSearch.taskId,
 
   controller.search,
 );
