@@ -481,6 +481,131 @@ function _makePipeline({
 
   pipeline.push({ $sort: sort });
 
+
+
+
+
+
+  if (search && limit) {
+    // pipeline.push(..._getSearhPipeline(search, limit, sort));
+
+
+    pipeline.push(
+  // Этап 1: Поиск документов с совпадениями (левая часть JOIN)
+    {
+      $match: {
+        $and: [
+          {
+            $or: accessDocTypes.map((e) => ({
+              directing: new mongoose.Types.ObjectId(e[0]),
+              task: new mongoose.Types.ObjectId(e[1]),
+            })),
+          },
+          (statusCode ? { statusCode } : {}),
+          (directingId ? { directing: new mongoose.Types.ObjectId(directingId) } : {}),
+          (lastId ? { _id: { $lt: new mongoose.Types.ObjectId(lastId) } } : {}),
+          { title: { $regex: search, $options: 'i' } },
+        ]
+      }
+    },
+    {
+      $lookup: {
+        from: 'cars',
+        localField: 'car',
+        foreignField: '_id',
+        as: 'car',
+      },
+    },
+    { $unwind: { path: '$car', preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: 1,
+        doc: '$$ROOT',
+        type: { $literal: 'doc' }, // Помечаем документы из Doc
+      },
+    },
+    { $limit: limit }, // limit для документов
+
+    // Этап 2: Поиск автомобилей с совпадениями (правая часть JOIN)
+    {
+      $unionWith: {
+        coll: 'cars',
+        pipeline: [
+          {
+            $match: { searchCombined: { $regex: search, $options: 'i' } },
+          },
+          // { $limit: limit }, // limit для авто
+          {
+            $lookup: {
+              from: 'docs',
+              localField: '_id',
+              foreignField: 'car',
+              as: 'doc',
+              pipeline: [
+                {
+                  $match: {
+                    $and: [
+                      {
+                        $or: accessDocTypes.map((e) => ({
+                          directing: new mongoose.Types.ObjectId(e[0]),
+                          task: new mongoose.Types.ObjectId(e[1]),
+                        })),
+                      },
+                      (statusCode ? { statusCode } : {}),
+                      (directingId ? { directing: new mongoose.Types.ObjectId(directingId) } : {}),
+                    ]
+                  }
+                },
+              ],
+            },
+          },
+          { $unwind: { path: '$doc', preserveNullAndEmptyArrays: true } },
+          {
+            $project: {
+              _id: '$doc._id',
+              doc: {
+                $mergeObjects: [
+                  '$doc',
+                  { car: '$$ROOT' },
+                ],
+              },
+              type: { $literal: 'car' }, // Помечаем документы из Car
+            },
+          },
+        ],
+      },
+    },
+
+    // Этап 3: Объединение и дедупликация
+    {
+      $group: {
+        _id: '$_id', // Группируем по ID документа
+        doc: { $first: '$doc' }, // Берем первую версию документа
+        types: { $addToSet: '$type' }, // Сохраняем все типы (doc/car)
+      },
+    },
+    {
+      $replaceRoot: { newRoot: '$doc' }, // Оставляем только данные документа
+    },
+    // { $limit: limit } // финальный limit (опционально)
+    {$sort: sort} // сортировка результатов STAGE 2 (обязательно)
+    );
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // STAGE 1
   const matchRulesStage1 = {
     $match: { $and: [] },
@@ -519,9 +644,9 @@ function _makePipeline({
   pipeline.push({ $limit: limit }); // limit для документов STAGE 1
 
    // STAGE 2
-   if (search && limit) {
-    pipeline.push(..._getSearhPipeline(search, limit, sort));
-  }
+  //  if (search && limit) {
+  //   pipeline.push(..._getSearhPipeline(search, limit, sort));
+  // }
 
   // STAGE 3
   pipeline.push(
