@@ -45,7 +45,6 @@ function setSearchCombined() {
   this.searchCombined = `${this.carModel} ${this.vin} ${this.stateNumber}`;
 }
 
-
 // подстрока ищется ИЛИ по индексу полнотекстового поиска
 // ИЛИ по регулярному выражению по полю 'vin'
 // этот индекс нужен для возможности объединения полнотекстового поиска
