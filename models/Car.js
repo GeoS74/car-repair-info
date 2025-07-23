@@ -19,6 +19,8 @@ const Schema = new mongoose.Schema({
   },
   place: String,
   yearProduction: String,
+
+  searchCombined: String,
 }, {
   timestamps: true,
 });
@@ -34,19 +36,24 @@ Schema.index(
   },
 );
 
+/**
+ * создание и обновление поля searchCombined для оптимизации поиска
+ */
+Schema.pre('save', setSearchCombined);
+
+function setSearchCombined() {
+  this.searchCombined = `${this.carModel} ${this.vin} ${this.stateNumber}`;
+}
+
+
 // подстрока ищется ИЛИ по индексу полнотекстового поиска
 // ИЛИ по регулярному выражению по полю 'vin'
-// это индекс нужен для возможности объединения полнотекстового поиска
+// этот индекс нужен для возможности объединения полнотекстового поиска
 // и поиска по регулярному выражению
-Schema.index({ carModel: 1, vin: 1 });
-Schema.index({ carModel: 1 }); // текстовый индекс для поиска по модели
 Schema.index({ vin: 1 });
-// CarSchema.index({ vin: 1 }); // уже есть уникальный индекс
-// CarSchema.index({ stateNumber: 1 }); // уже есть уникальный индекс
-// CarSchema.index({ 
-//   carModel: 1,
-//   vin: 1,
-//   stateNumber: 1 
-// }); // составной индекс
+Schema.index({ stateNumber: 1, carModel: 1, vin: 1 }, { collation: { locale: 'en', strength: 2 } });
+Schema.index({ stateNumber: 1 });
+Schema.index({ carModel: 1 });
+Schema.index({ searchCombined: 1 });
 
 module.exports = connection.model('Car', Schema);

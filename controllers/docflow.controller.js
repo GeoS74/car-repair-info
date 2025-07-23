@@ -375,7 +375,7 @@ function _makeFilterRules({
   filter.$or = accessDocTypes.map((e) => ({
     directing: e[0],
     task: e[1]
-    }));
+  }));
 
   if (directingId) {
     filter.directing = directingId;
@@ -455,8 +455,8 @@ module.exports.searchByDocAndCar = async (ctx) => {
     });
     const docs = await _searchByDocAndCar(pipeline);
 
-    // ctx.body = docs;
-    ctx.body = docs.map((doc) => (mapper(doc)));
+    ctx.body = docs;
+    // ctx.body = docs.map((doc) => (mapper(doc)));
   } catch (error) {
     ctx.body = [];
   }
@@ -620,7 +620,7 @@ module.exports.searchByDocAndCar = async (ctx) => {
 // }
 
 async function _searchByDocAndCar(pipeline) {
-  return Doc.aggregate(pipeline);
+  return Doc.aggregate(pipeline); //.explain("executionStats");
 }
 
 function _makePipeline({
@@ -641,16 +641,12 @@ function _makePipeline({
   if (!accessDocTypes.length) {
     throw new Error();
   }
- 
+
 
   // STAGE 1
   const matchRulesStage1 = {
     $match: { $and: [] }
   };
-
-  // if (search) {
-  //   matchRulesStage1.$match.$and.push({ 'title': { $regex: search, $options: 'i' } });
-  // }
 
   matchRulesStage1.$match.$and.push({
     $or: accessDocTypes.map((e) => ({
@@ -662,9 +658,6 @@ function _makePipeline({
   if (statusCode) {
     matchRulesStage1.$match.$and.push({ statusCode: statusCode });
   }
-
-  
-
 
   if (directingId) {
     matchRulesStage1.$match.$and.push({ directing: new mongoose.Types.ObjectId(directingId) });
@@ -678,34 +671,421 @@ function _makePipeline({
     matchRulesStage1.$match.$and.push({ _id: { $lt: new mongoose.Types.ObjectId(lastId) } });
   }
 
- 
-
   if (author === '1') {
     matchRulesStage1.$match.$and.push({ author: new mongoose.Types.ObjectId(user) })
   }
-
-
 
   if (matchRulesStage1.$match.$and.length) {
     pipeline.push(matchRulesStage1)
   }
 
-   
- 
- 
+
+
+  // // bad
+  // pipeline.push(
+  //   {
+  //     $lookup: {
+  //       from: "cars",
+  //       let: { carId: "$car" },
+  //       pipeline: [
+  //         {
+  //           $match: {
+  //             $expr: { $eq: ["$_id", "$$carId"] },
+  //             $or: [
+  //               { carModel: { $regex: search, $options: "i" } },
+  //               { stateNumber: { $regex: search, $options: "i" } },
+  //               { vin: { $regex: search, $options: "i" } }
+  //             ]
+  //           }
+  //         }
+  //       ],
+  //       as: "car"
+  //     },
+  //   },
+  //   {
+  //     $unwind: {
+  //       path: "$car",
+  //       preserveNullAndEmptyArrays: false // false удалит документ если это пустой массив, null или поля нет
+  //     }
+  //   },
+  //   // это альтернатива для $unwind
+  //   // {
+  //   //   $addFields: {
+  //   //     car: { $arrayElemAt: ['$car', 0] }
+  //   //   }
+  //   // },
+  // );
+
+
+
+  // // bad
+  // pipeline.push(
+  //   {
+  //     $facet: {
+  //       byTitle: [
+  //         { $match: { "title": { $regex: search, $options: "i" } } },
+  //         { $limit: limit }
+  //       ],
+  //       byCar: [
+  //         // { $match: { "car": { $exists: true } } },
+  //         {
+  //           $lookup: {
+  //             from: 'cars',
+  //             localField: 'car',
+  //             foreignField: '_id',
+  //             as: 'car' // Можно использовать единственное число при таком подходе
+  //           }
+  //         },
+  //         { $unwind: "$car" },
+  //         {
+  //           $match: {
+  //             $or: [
+  //               { 'car.stateNumber': { $regex: search, $options: 'i' } },
+  //               { 'car.carModel': { $regex: search, $options: 'i' } },
+  //               { 'car.vin': { $regex: search, $options: 'i' } },
+  //             ]
+  //           }
+  //         },
+  //         { $limit: limit }
+  //       ]
+  //     }
+  //   },
+  //   { $project: { combined: { $concatArrays: ["$byTitle", "$byCar"] } } },
+  //   { $unwind: "$combined" },
+  //   { $replaceRoot: { newRoot: "$combined" } },
+  //   { $limit: limit }
+  // );
+
+
+
+
+
+
+  // slow worked
+  // pipeline.push(
+  //   {
+  //     $lookup: {
+  //       from: 'cars',
+  //       localField: 'car',
+  //       foreignField: '_id',
+  //       as: 'car' // Можно использовать единственное число при таком подходе
+  //     }
+  //   },
+  //   { $unwind: '$car' },
+  // );
+
+  // pipeline.push(
+  //   {
+  //     $match: {
+  //       $or: [
+  //         { 'title': { $regex: search, $options: 'i' } },
+  //         { 'car.searchCombined': { $regex: search, $options: 'i' } },
+  //       ]
+  //     }
+  //   }
+  // );
+
+  // if (limit) {
+  //   pipeline.push({ $limit: limit });
+  // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // 1.1. Сначала ищутся документы в коллекции docs, где title содержит подстроку search (регистронезависимо).
+    // 1.2. Для каждого найденного документа подтягивается связанный автомобиль из коллекции cars.
+    // 1.3. Результаты помечаются как type: "doc".
+
+    // 2.1 Ищутся автомобили в коллекции cars, где searchCombined содержит подстроку search.
+    // 2.2 Для каждого найденного автомобиля подтягиваются связанные документы из docs.
+    // 2.3 Результаты помечаются как type: "car".
+
+    // 3.1 $group устраняет дубликаты (если документ найден и через docs, и через cars).
+    // 3.2 types содержит все способы, которыми был найден документ (например, ["doc", "car"]).
+    // 3.3 $limit применяется уже к объединённым результатам.
+
+    // Это не параллельный поиск. MongoDB сначала обрабатывает первую часть конвейера, затем вторую.
 
   pipeline.push(
+    // Этап 1: Поиск документов с совпадениями (левая часть JOIN)
+    {
+      $match: { "title": { $regex: search, $options: "i" } }
+    },
     {
       $lookup: {
-        from: 'cars',
-        localField: 'car',
-        foreignField: '_id',
-        as: 'car' // Можно использовать единственное число при таком подходе
+        from: "cars",
+        localField: "car",
+        foreignField: "_id",
+        as: "car"
       }
     },
-    {$unwind: '$car' },
+    { $unwind: { path: "$car", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: 1,
+        doc: "$$ROOT",
+        type: { $literal: "doc" } // Помечаем документы из Doc
+      }
+    },
+    { $limit: limit }, // limit для документов
+
+    // Этап 2: Поиск автомобилей с совпадениями (правая часть JOIN)
+    {
+      $unionWith: {
+        coll: "cars",
+        pipeline: [
+          {
+            $match: { "searchCombined": { $regex: search, $options: "i" } }
+          },
+          { $limit: limit }, // limit для авто
+          {
+            $lookup: {
+              from: "docs",
+              localField: "_id",
+              foreignField: "car",
+              as: "doc"
+            }
+          },
+          { $unwind: { path: "$doc", preserveNullAndEmptyArrays: true } },
+          {
+            $project: {
+              _id: "$doc._id",
+              doc: {
+                $mergeObjects: [
+                  "$doc",
+                  { car: "$$ROOT" }
+                ]
+              },
+              type: { $literal: "car" } // Помечаем документы из Car
+            }
+          }
+        ]
+      }
+    },
+
+    // Этап 3: Объединение и дедупликация
+    {
+      $group: {
+        _id: "$_id", // Группируем по ID документа
+        doc: { $first: "$doc" }, // Берем первую версию документа
+        types: { $addToSet: "$type" } // Сохраняем все типы (doc/car)
+      }
+    },
+    {
+      $replaceRoot: { newRoot: "$doc" } // Оставляем только данные документа
+    },
+    { $limit: limit } // финальный limit
   );
- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // pipeline.push(
+  //   {
+  //     $match: {
+  //       "title": { $regex: search, $options: "i" }
+  //     }
+  //   },
+  //   {
+  //     $lookup: {
+  //       from: "cars",
+  //       localField: "car",
+  //       foreignField: "_id",
+  //       as: "car"
+  //     }
+  //   },
+  //   { $unwind: { path: "$car", preserveNullAndEmptyArrays: true } },
+  //   {
+  //     $project: {
+  //       _id: 1,
+  //       doc: "$$ROOT",
+  //       type: { $literal: "doc" } // Помечаем документы из Doc
+  //     }
+  //   },
+  //   { $limit: limit },
+
+  //   // Этап 2: Поиск автомобилей с совпадениями (правая часть JOIN)
+  //   {
+  //     $unionWith: {
+  //       coll: "cars",
+  //       pipeline: [
+  //         {
+  //           $match: {
+  //             $or: [
+  //               { "stateNumber": { $regex: search, $options: "i" } },
+  //               { "carModel": { $regex: search, $options: "i" } },
+  //               { "vin": { $regex: search, $options: "i" } },
+  //             ]
+  //           }
+  //         },
+  //         {
+  //           $lookup: {
+  //             from: "docs",
+  //             localField: "_id",
+  //             foreignField: "car",
+  //             as: "doc"
+  //           }
+  //         },
+  //         { $unwind: { path: "$doc", preserveNullAndEmptyArrays: true } },
+  //         {
+  //           $project: {
+  //             _id: "$doc._id",
+  //             doc: {
+  //               $mergeObjects: [
+  //                 "$doc",
+  //                 { car: "$$ROOT" }
+  //               ]
+  //             },
+  //             type: { $literal: "car" } // Помечаем документы из Car
+  //           }
+  //         }
+  //       ]
+  //     }
+  //   },
+
+  //   // Этап 3: Объединение и дедупликация
+  //   {
+  //     $group: {
+  //       _id: "$_id",
+  //       doc: { $first: "$doc" },
+  //       types: { $addToSet: "$type" }
+  //     }
+  //   },
+  //   {
+  //     $replaceRoot: { newRoot: "$doc" }
+  //   },
+  //   { $limit: limit }
+  // );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // if (limit) {
+  //   pipeline.push({ $limit: limit });
+  // }
+
+
+
+
+
+
+
+
+
+
+  // pipeline.push(
+  //   // Путь по title
+  //   { $match: { "title": { $regex: search, $options: "i" } } },
+  //   { $limit: limit },
+  //   {
+  //     $unionWith: {
+  //       coll: "docs",
+  //       pipeline: [
+  //         // Путь по автомобилям
+  //         {
+  //           $lookup: {
+  //             from: "cars",
+  //             // let: { carId: "$car" },
+  //             pipeline: [
+  //               {
+  //                 $match: {
+  //                   // $expr: { $eq: ["$_id", "$$carId"] },
+  //                   $or: [
+  //                     { "carModel": { $regex: search, $options: "i" } },
+  //                     { "stateNumber": { $regex: search, $options: "i" } },
+  //                     { "vin": { $regex: search, $options: "i" } }
+  //                   ]
+  //                 }
+  //               }
+  //             ],
+  //             as: "car"
+  //           }
+  //         },
+  //         { $unwind: "$car" },
+  //         // { $match: { "car": { $ne: null } } },
+  //         { $limit: limit }
+  //       ]
+  //     }
+  //   },
+  //   // Дальнейшая обработка...
+  //   {
+  //     $group: {
+  //       _id: "$_id",
+  //       doc: { $first: "$$ROOT" }
+  //     }
+  //   },
+  //   { $replaceRoot: { newRoot: "$doc" } },
+  // );
+
+  // pipeline.push(
+  //   {
+  //     $lookup: {
+  //       from: 'cars',
+  //       localField: 'car',
+  //       foreignField: '_id',
+  //       as: 'car' // Можно использовать единственное число при таком подходе
+  //     }
+  //   },
+  //   { $unwind: '$car' },
+  // );
+
+  // if (limit) {
+  //   pipeline.push({ $limit: limit });
+  // }
+
+
+
+
+
+
+
+
+
+
 
   // pipeline.push(
   //   {
@@ -724,12 +1104,14 @@ function _makePipeline({
   //     }
   //   },
   // );
- 
- 
 
-  const matchRules = {
-    $match: { $and: [] }
-  };
+
+
+
+
+  // const matchRules = {
+  //   $match: { $and: [] }
+  // };
 
   // matchRules.$match.$and.push({
   //   $or: accessDocTypes.map((e) => ({
@@ -738,26 +1120,25 @@ function _makePipeline({
   //   }))
   // });
 
-  if (search) {
-    matchRules.$match.$and.push({
-      $or: [
-        { 'title': { $regex: search, $options: 'i' } },
-        { 'car.carModel': { $regex: search, $options: 'i' } },
-        { 'car.vin': { $regex: search, $options: 'i' } },
-      ],
-    })
-  }
+  // if (search) {
+  //   matchRules.$match.$and.push({
+  //     $or: [
+  //       { 'title': { $regex: search, $options: 'i' } },
+  //       { 'car.stateNumber': { $regex: search, $options: 'i' } },
+  //       { 'car.carModel': { $regex: search, $options: 'i' } },
+  //       { 'car.vin': { $regex: search, $options: 'i' } },
+  //     ],
+  //   })
+  // }
 
-  if (matchRules.$match.$and.length) {
-    pipeline.push(matchRules)
-  }
+  // if (matchRules.$match.$and.length) {
+  //   pipeline.push(matchRules)
+  // }
 
-  if (limit) {
-    pipeline.push({ $limit: limit });
-  }
- 
 
- 
+
+
+
 
 
   pipeline.push(
@@ -814,7 +1195,7 @@ function _makePipeline({
 
   pipeline.push({ $sort: { _id: -1 } });
 
-  
+
 
   return pipeline;
 }

@@ -69,7 +69,7 @@ Schema.index(
     title: 'text',
   },
   {
-    name: 'ActionSearchIndex',
+    name: 'DocSearchIndex',
     default_language: 'russian',
   },
 );
@@ -87,14 +87,14 @@ Schema.pre('save', async function _(next) {
   next();
 });
 
-Schema.index({ statusCode: 1, directing: 1, task: 1 }); // уже есть
-Schema.index({ directing: 1, task: 1 }); // уже есть
-Schema.index({ directing: 1 }); // уже есть
-Schema.index({ task: 1 }); // уже есть
-Schema.index({ statusCode: 1 }); // уже есть
-Schema.index({ author: 1 }); // уже есть
-Schema.index({ title: 1 }); // уже есть
-Schema.index({ car: 1 }); // индекс для поиска по автомобилю
-// DocSchema.index({ createdAt: -1 }); // для сортировки по дате создания
+Schema.index({ statusCode: 1, directing: 1, task: 1 });
+Schema.index({ directing: 1, task: 1 });
+Schema.index({ directing: 1 });
+Schema.index({ task: 1 });
+Schema.index({ statusCode: 1 });
+Schema.index({ author: 1 });
+Schema.index({ car: 1 });
+Schema.index({ createdAt: -1 });
+Schema.index({ title: 1 });
 
 module.exports = connection.model('Doc', Schema);

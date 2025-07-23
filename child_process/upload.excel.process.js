@@ -56,6 +56,7 @@ async function _upload(rows) {
       stateNumber: rows[i][data.structure.stateNumberField] || undefined,
       place: rows[i][data.structure.placeField] || undefined,
       yearProduction: rows[i][data.structure.yearProduction] || undefined,
+      searchCombined: `${rows[i][data.structure.carModelField] || ''} ${rows[i][data.structure.vinField] || ''} ${rows[i][data.structure.stateNumberField] || ''}`,
     });
 
     if ((i + 1) % 5 === 0) {
