@@ -479,7 +479,7 @@ function _makePipeline({
     throw new Error();
   }
 
-  pipeline.push({ $sort: sort });
+  // pipeline.push({ $sort: sort });
 
 
 
@@ -508,7 +508,7 @@ function _makePipeline({
           ]
         }
       },
-      { $sort: sort },
+      { $sort: sort },  // сортировка перед limit (обязательно)
       { $limit: limit }, // limit для документов
       {
         $lookup: {
@@ -516,6 +516,7 @@ function _makePipeline({
           localField: 'car',
           foreignField: '_id',
           as: 'car',
+          pipeline: [{ $limit: 1 }], // небольшая оптимизация, т.к. связь один-к-одному
         },
       },
       { $unwind: { path: '$car', preserveNullAndEmptyArrays: true } },
@@ -526,7 +527,6 @@ function _makePipeline({
           type: { $literal: 'doc' }, // Помечаем документы из Doc
         },
       },
-      { $limit: limit }, // limit для документов
 
       // Этап 2: Поиск автомобилей с совпадениями (правая часть JOIN)
       {
@@ -536,7 +536,6 @@ function _makePipeline({
             {
               $match: { searchCombined: { $regex: search, $options: 'i' } },
             },
-            // { $limit: limit }, // limit для авто
             {
               $lookup: {
                 from: 'docs',
@@ -558,7 +557,7 @@ function _makePipeline({
                       ]
                     }
                   },
-                  // { $sort: sort },
+                  { $sort: sort }, // сортировка перед limit (обязательно)
                   { $limit: limit }, // limit для авто
                 ],
               },
@@ -591,7 +590,7 @@ function _makePipeline({
       {
         $replaceRoot: { newRoot: '$doc' }, // Оставляем только данные документа
       },
-      { $sort: sort }, // сортировка результатов STAGE 2 (обязательно)
+      { $sort: sort }, // // сортировка результатов перед limit (обязательно)
       { $limit: limit }, // финальный limit (обязательно)
     );
 
@@ -632,7 +631,25 @@ function _makePipeline({
     if (matchRulesStage1.$match.$and.length) {
       pipeline.push(matchRulesStage1);
     }
+
+    pipeline.push({ $sort: sort });
     pipeline.push({ $limit: limit }); // limit для документов STAGE 1
+
+    pipeline.push({
+      $lookup: {
+        from: 'cars',
+        let: { carId: '$car' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$_id', '$$carId'] } } },
+        ],
+        as: 'car',
+      },
+    },
+      {
+        $addFields: {
+          car: { $arrayElemAt: ['$car', 0] }, // Преобразуем массив в объект
+        },
+      },);
   }
 
 
