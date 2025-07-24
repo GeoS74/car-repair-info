@@ -503,7 +503,9 @@ function _makePipeline({
             },
             (statusCode ? { statusCode } : {}),
             (directingId ? { directing: new mongoose.Types.ObjectId(directingId) } : {}),
+            (taskId ? { task: new mongoose.Types.ObjectId(taskId) } : {}),
             (lastId ? { _id: { $lt: new mongoose.Types.ObjectId(lastId) } } : {}),
+            (author === '1' ? { author: new mongoose.Types.ObjectId(user) } : {}),
             { title: { $regex: search, $options: 'i' } },
           ]
         }
@@ -554,6 +556,9 @@ function _makePipeline({
                         },
                         (statusCode ? { statusCode } : {}),
                         (directingId ? { directing: new mongoose.Types.ObjectId(directingId) } : {}),
+                        (taskId ? { task: new mongoose.Types.ObjectId(taskId) } : {}),
+                        (lastId ? { _id: { $lt: new mongoose.Types.ObjectId(lastId) } } : {}),
+                        (author === '1' ? { author: new mongoose.Types.ObjectId(user) } : {}),
                       ]
                     }
                   },
