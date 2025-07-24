@@ -446,7 +446,6 @@ module.exports.searchByDocAndCar = async (ctx) => {
     });
     const docs = await _searchByDocAndCar(pipeline);
 
-    // ctx.body = docs;
     ctx.body = docs.map((doc) => (mapper(doc)));
   } catch (error) {
     ctx.body = [];
