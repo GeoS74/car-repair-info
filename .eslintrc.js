@@ -19,6 +19,7 @@ module.exports = {
     'no-restricted-syntax': 'off',
     'no-await-in-loop': 'off',
     'no-param-reassign': 'off',
+    'prefer-rest-params': 'off',
   },
   ignorePatterns: ['*.test.js', 'fixtures/*', 'files/*', '*mongosh.js', '/.idea'],
 };
