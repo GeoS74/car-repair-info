@@ -16,7 +16,11 @@ log4js.configure({
       appenders: ['out', 'app'],
       level: 'all',
     },
+    prod: {
+      appenders: ['out'],
+      level: 'all',
+    },
   },
 });
 
-module.exports = log4js.getLogger('default');
+module.exports = log4js.getLogger(config.node.env === 'dev' ? 'default' : 'prod');
