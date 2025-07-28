@@ -92,6 +92,19 @@ router.get(
 );
 
 router.get(
+  '/download/doccar',
+  validatorSearch.searchString,
+  // validatorSearch.lastId,
+  validatorSearch.limit,
+  validatorSearch.directingId,
+  validatorSearch.taskId,
+  validatorSearch.statusCode,
+  validatorSearch.calendar,
+
+  controller.downloadExcel,
+);
+
+router.get(
   '/:id',
   validator.objectId,
   validator.checkAccessDocTypesById,
