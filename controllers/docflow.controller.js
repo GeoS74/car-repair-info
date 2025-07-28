@@ -558,16 +558,20 @@ module.exports.downloadExcel_ = async (ctx) => {
 module.exports.downloadExcel = async (ctx) => {
   const stream = new PassThrough();
 
-  const emit = stream.emit;
-  stream.emit = function (event) {
-    console.log(event) //вывод в консоль названия события
-    emit.apply(this, arguments)
-  }
+  let isStreamFinished = false;
 
-  // stream.on('error', (err) => {
-  //   logger.error('Stream error:', err);
-  //   ctx.throw(500, 'stream error');
-  // });
+  // 2. Мониторинг событий потока (для отладки)
+  stream.on('finish', () => {
+    isStreamFinished = true;
+    console.log('Stream finished successfully');
+  });
+  stream.on('error', (err) => console.error('Stream error:', err));
+
+  // const emit = stream.emit;
+  // stream.emit = function (event) {
+  //   console.log(event) //вывод в консоль названия события
+  //   emit.apply(this, arguments)
+  // }
 
   // установить заголовки ДО начала записи
   ctx.set({
@@ -580,21 +584,29 @@ module.exports.downloadExcel = async (ctx) => {
 
 
   try {
-    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream });
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter(
+      {
+        stream,
+        useStyles: false,  // Ускоряет запись
+        useSharedStrings: false,  // Уменьшает размер файла
+        bufferSize: 1024 * 1024  // Увеличиваем буфер
+      }
+    );
     const worksheet = workbook.addWorksheet('Ремонты');
 
-    // worksheet.addRow([
-    //   'Подразделение',
-    //   'Заявка',
-    //   'Автомобиль',
-    //   'Гос. номер',
-    //   'VIN-код',
-    //   'Автор',
-    //   'Дата создания',
-    // ]).commit();
+    worksheet.addRow([
+      'Подразделение',
+      'Заявка',
+      'Автомобиль',
+      'Гос. номер',
+      'VIN-код',
+      'Автор',
+      'Дата создания',
+    ]).commit();
 
     ctx.query.lastId = null;
-    while (true) {
+    let processedRows = 0;
+    while (!isStreamFinished) {
       // _makePipeline выбрасывает исключение
       const pipeline = _makePipeline({
         ...ctx.query,
@@ -603,29 +615,35 @@ module.exports.downloadExcel = async (ctx) => {
       });
 
       const docs = await _searchByDocAndCar(pipeline);
+
       if (!docs.length) {
         break;
       }
-      // docs.map((d) => {
-      //   const doc = mapper(d);
-      //   worksheet.addRow([
-      //     doc.directing.title,
-      //     doc.title,
-      //     doc?.car?.carModel || '',
-      //     doc?.car?.stateNumber || '',
-      //     doc?.car?.vin || '',
-      //     doc.author.name,
-      //     doc.createdAt,
-      //   ]).commit();
-      // });
+      docs.map((d) => {
+        const doc = mapper(d);
+        worksheet.addRow([
+          doc.directing.title,
+          doc.title,
+          doc?.car?.carModel || '',
+          doc?.car?.stateNumber || '',
+          doc?.car?.vin || '',
+          doc.author.name,
+          doc.createdAt,
+        ]).commit();
+      });
 
 
       ctx.query.lastId = docs[docs.length - 1]._id;
 
-      console.log(ctx.query.lastId, ' ', docs.length)
+      // console.log(ctx.query.lastId, ' ', docs.length)
       // await new Promise(resolve => process.nextTick(resolve));
+      processedRows++;
 
-      break;
+      // Пауза каждые 50 строк
+      if (processedRows % 50 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+      // break; // (*)
     }
 
 
@@ -633,7 +651,7 @@ module.exports.downloadExcel = async (ctx) => {
 
     await workbook.commit(); // завершить запись
     console.log('end commit')
-    // stream.end(); // завершить поток
+    stream.end(); // завершить поток
     console.log('end stream');
 
   } catch (error) {
