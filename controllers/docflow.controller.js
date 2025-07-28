@@ -1,8 +1,6 @@
 const fs = require('fs/promises');
-const XLSX = require('xlsx');
 const mongoose = require('mongoose');
 const ExcelJS = require('exceljs');
-const { PassThrough } = require('stream');
 const path = require('path');
 const Doc = require('../models/Doc');
 const Comment = require('../models/Comment');
@@ -438,160 +436,23 @@ function _makeFilterRules({
   return { filter, projection, limit };
 }
 
-module.exports.downloadExcel________ = async (ctx) => {
-  try {
-    // _makePipeline выбрасывает исключение
-    const pipeline = _makePipeline({
-      ...ctx.query,
-      accessDocTypes: ctx.accessDocTypes,
-      user: ctx.user.uid,
-    });
-
-    // worksheet.addRow([
-    //   'Подразделение',
-    //   'Заявка',
-    //   'Автомобиль',
-    //   'Гос. номер',
-    //   'VIN-код',
-    //   'Автор',
-    //   'Дата создания',
-    // ]).commit();
-
-    const docs = await _searchByDocAndCar(pipeline);
-    const mapperDocs = docs.map(d => [d.title, d.createdAt]);
-
-    let workbook = XLSX.utils.book_new();
-    let worksheet = XLSX.utils.aoa_to_sheet(mapperDocs);
-    XLSX.utils.book_append_sheet(workbook, worksheet);
-
-    const result = XLSX.write(workbook, {
-      type: 'buffer',
-      bookType: 'xlsx',
-    });
-
-    worksheet = null;
-    workbook = null;
-
-    ctx.set('Content-Disposition', 'attachment; filename="price.xlsx"');
-    ctx.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    ctx.status = 200;
-    ctx.body = result;
-
-  } catch (error) {
-    logger.error('Excel generation error:', error.message);
-    ctx.throw(500, 'generate excel error');
-  }
-};
-
-// bad work
-module.exports.downloadExcel_ = async (ctx) => {
-  const stream = new PassThrough();
-
-  stream.on('error', (err) => {
-    logger.error('Stream error:', err);
-    if (!ctx.headersSent) {
-      ctx.throw(500, 'stream error');
-    }
-  });
-
-  // установить заголовки ДО начала записи
-  ctx.set({
-    'Content-Disposition': 'attachment; filename="export.xlsx"',
-    'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  });
-
-  ctx.body = stream;
-
-  const emit = stream.emit;
-  stream.emit = function (event) {
-    console.log(event) //вывод в консоль названия события
-    emit.apply(this, arguments)
-  }
-
-  try {
-    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream });
-    const worksheet = workbook.addWorksheet('Ремонты');
-
-    // _makePipeline выбрасывает исключение
-    const pipeline = _makePipeline({
-      ...ctx.query,
-      accessDocTypes: ctx.accessDocTypes,
-      user: ctx.user.uid,
-    });
-
-    worksheet.addRow([
-      'Подразделение',
-      'Заявка',
-      'Автомобиль',
-      'Гос. номер',
-      'VIN-код',
-      'Автор',
-      'Дата создания',
-    ]).commit();
-
-    const docs = await _searchByDocAndCar(pipeline);
-
-    docs.map((d) => {
-      const doc = mapper(d);
-      worksheet.addRow([
-        doc.directing.title,
-        doc.title,
-        doc?.car?.carModel || '',
-        doc?.car?.stateNumber || '',
-        doc?.car?.vin || '',
-        doc.author.name,
-        doc.createdAt,
-      ]).commit();
-    });
-
-    await workbook.commit(); // завершить запись
-    stream.end(); // завершить поток
-
-  } catch (error) {
-    logger.error('Excel generation error:', error.message);
-    stream.destroy();
-    ctx.throw(500, 'generate excel error');
-  }
-};
-
-// dont work
 module.exports.downloadExcel = async (ctx) => {
-  const stream = new PassThrough();
-
-  let isStreamFinished = false;
-
-  // 2. Мониторинг событий потока (для отладки)
-  stream.on('finish', () => {
-    isStreamFinished = true;
-    console.log('Stream finished successfully');
-  });
-  stream.on('error', (err) => console.error('Stream error:', err));
-
-  // const emit = stream.emit;
-  // stream.emit = function (event) {
-  //   console.log(event) //вывод в консоль названия события
-  //   emit.apply(this, arguments)
-  // }
-
   // установить заголовки ДО начала записи
   ctx.set({
     'Content-Disposition': 'attachment; filename="export.xlsx"',
-    'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
-
-  ctx.body = stream;
-
-
 
   try {
     const workbook = new ExcelJS.stream.xlsx.WorkbookWriter(
       {
-        stream,
-        useStyles: false,  // Ускоряет запись
-        useSharedStrings: false,  // Уменьшает размер файла
-        bufferSize: 1024 * 1024  // Увеличиваем буфер
-      }
+        useStyles: false, // Ускоряет запись
+        useSharedStrings: false, // Уменьшает размер файла
+      },
     );
+
+    ctx.body = workbook.stream;
+
     const worksheet = workbook.addWorksheet('Ремонты');
 
     worksheet.addRow([
@@ -605,8 +466,8 @@ module.exports.downloadExcel = async (ctx) => {
     ]).commit();
 
     ctx.query.lastId = null;
-    let processedRows = 0;
-    while (!isStreamFinished) {
+
+    for (;;) {
       // _makePipeline выбрасывает исключение
       const pipeline = _makePipeline({
         ...ctx.query,
@@ -619,7 +480,8 @@ module.exports.downloadExcel = async (ctx) => {
       if (!docs.length) {
         break;
       }
-      docs.map((d) => {
+
+      for (const d of docs) {
         const doc = mapper(d);
         worksheet.addRow([
           doc.directing.title,
@@ -630,33 +492,14 @@ module.exports.downloadExcel = async (ctx) => {
           doc.author.name,
           doc.createdAt,
         ]).commit();
-      });
-
+      }
 
       ctx.query.lastId = docs[docs.length - 1]._id;
-
-      // console.log(ctx.query.lastId, ' ', docs.length)
-      // await new Promise(resolve => process.nextTick(resolve));
-      processedRows++;
-
-      // Пауза каждые 50 строк
-      if (processedRows % 50 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 10));
-      }
-      // break; // (*)
     }
 
-
-    console.log('end while');
-
     await workbook.commit(); // завершить запись
-    console.log('end commit')
-    stream.end(); // завершить поток
-    console.log('end stream');
-
   } catch (error) {
     logger.error('Excel generation error:', error.message);
-    stream.destroy();
     ctx.throw(500, 'generate excel error');
   }
 };
@@ -819,8 +662,8 @@ function _getPipelineForSearch({
           },
           {
             $match: {
-              'doc.0': { $exists: true } // Только автомобили с подходящими документами (обязательно)
-            }
+              'doc.0': { $exists: true }, // Только автомобили с подходящими документами (обязательно)
+            },
           },
           { $unwind: { path: '$doc', preserveNullAndEmptyArrays: true } },
           {
