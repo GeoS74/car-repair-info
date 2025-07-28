@@ -86,6 +86,7 @@ router.get(
   validatorSearch.directingId,
   validatorSearch.taskId,
   validatorSearch.statusCode,
+  validatorSearch.calendar,
 
   controller.searchByDocAndCar,
 );

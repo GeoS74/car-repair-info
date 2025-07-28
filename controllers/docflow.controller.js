@@ -507,6 +507,8 @@ function _getPipelineForSearch({
   taskId,
   accessDocTypes,
   statusCode,
+  dateFrom,
+  dateTo,
 }, sort) {
   return [
     // Этап 1: Поиск документов с совпадениями (левая часть JOIN)
@@ -520,6 +522,8 @@ function _getPipelineForSearch({
             })),
           },
           (statusCode ? { statusCode } : {}),
+          (dateFrom ? { createdAt: { $gte: dateFrom } } : {}),
+          (dateTo ? { createdAt: { $lt: dateTo } } : {}),
           (directingId ? { directing: new mongoose.Types.ObjectId(directingId) } : {}),
           (taskId ? { task: new mongoose.Types.ObjectId(taskId) } : {}),
           (lastId ? { _id: { $lt: new mongoose.Types.ObjectId(lastId) } } : {}),
@@ -573,6 +577,8 @@ function _getPipelineForSearch({
                         })),
                       },
                       (statusCode ? { statusCode } : {}),
+                      (dateFrom ? { createdAt: { $gte: dateFrom } } : {}),
+                      (dateTo ? { createdAt: { $lt: dateTo } } : {}),
                       (directingId ? { directing: new mongoose.Types.ObjectId(directingId) } : {}),
                       (taskId ? { task: new mongoose.Types.ObjectId(taskId) } : {}),
                       (lastId ? { _id: { $lt: new mongoose.Types.ObjectId(lastId) } } : {}),
@@ -629,6 +635,8 @@ function _getPipelineWithoutSearch({
   taskId,
   accessDocTypes,
   statusCode,
+  dateFrom,
+  dateTo,
 }, sort) {
   return [
     {
@@ -641,6 +649,8 @@ function _getPipelineWithoutSearch({
             })),
           },
           (statusCode ? { statusCode } : {}),
+          (dateFrom ? { createdAt: { $gte: dateFrom } } : {}),
+          (dateTo ? { createdAt: { $lt: dateTo } } : {}),
           (directingId ? { directing: new mongoose.Types.ObjectId(directingId) } : {}),
           (taskId ? { task: new mongoose.Types.ObjectId(taskId) } : {}),
           (lastId ? { _id: { $lt: new mongoose.Types.ObjectId(lastId) } } : {}),

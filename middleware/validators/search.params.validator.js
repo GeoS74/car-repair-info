@@ -56,6 +56,31 @@ module.exports.statusCode = async (ctx, next) => {
   await next();
 };
 
+// ожидает получение даты в формате YYYY-MM-DD_YYYY-MM-DD
+// месяц передаётся без ведущего нуля, отсчёт месяцев с 1
+module.exports.calendar = async (ctx, next) => {
+  if (ctx.query.calendar) {
+    const [from, to] = ctx.query.calendar.split('_');
+
+    if (!Number.isNaN(new Date(from).getTime())) {
+      ctx.query.dateFrom = new Date(`${from}Z`);
+    } else {
+      ctx.query.dateFrom = '';
+    }
+
+    if (!Number.isNaN(new Date(to).getTime())) {
+      ctx.query.dateTo = new Date(`${to}Z`);
+      ctx.query.dateTo.setUTCHours('23');
+      ctx.query.dateTo.setUTCMinutes('59');
+      ctx.query.dateTo.setUTCSeconds('59');
+    } else {
+      ctx.query.dateTo = '';
+    }
+  }
+
+  await next();
+};
+
 /**
  * валидаторы acceptor, recipient, author можно не включать
  * контроллер в любом случае сравнивает значение этих параметров с определенными значениями
