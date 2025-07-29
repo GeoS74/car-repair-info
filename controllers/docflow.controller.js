@@ -528,8 +528,6 @@ module.exports.downloadExcel = async (ctx) => {
       ctx.query.lastId = docs[docs.length - 1]._id;
     }
 
-    await workbook.commit();
-
     if (!connectionClosed) {
       await workbook.commit(); // завершить запись
     } else {
