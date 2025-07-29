@@ -4,6 +4,7 @@ const ExcelJS = require('exceljs');
 const path = require('path');
 const Doc = require('../models/Doc');
 const Comment = require('../models/Comment');
+const Status = require('../models/Status');
 const mapper = require('../mappers/docflow.mapper');
 const logger = require('../libs/logger');
 const controllerUser = require('./user.controller');
@@ -436,6 +437,12 @@ function _makeFilterRules({
   return { filter, projection, limit };
 }
 
+async function _getStatuses() {
+  const statusMap = new Map();
+  await Status.find({}).then((statuses) => statuses.map((s) => statusMap.set(s.code, s.title)));
+  return statusMap;
+}
+
 module.exports.downloadExcel = async (ctx) => {
   // установить заголовки ДО начала записи
   ctx.set({
@@ -453,19 +460,27 @@ module.exports.downloadExcel = async (ctx) => {
 
     ctx.body = workbook.stream;
 
-    const worksheet = workbook.addWorksheet('Ремонты');
+    const worksheet = workbook.addWorksheet('БОВИД - Ремонты');
 
     worksheet.addRow([
+      '№',
       'Подразделение',
+      'Дата создания заявки',
       'Заявка',
+      'Статус',
       'Автомобиль',
       'Гос. номер',
       'VIN-код',
+      'Местонахождение',
+      'Год выпуска',
+      'Пробег',
       'Автор',
-      'Дата создания',
     ]).commit();
 
+    const statuses = await _getStatuses();
+
     ctx.query.lastId = null;
+    let i = 1;
 
     for (;;) {
       // _makePipeline выбрасывает исключение
@@ -484,23 +499,29 @@ module.exports.downloadExcel = async (ctx) => {
       for (const d of docs) {
         const doc = mapper(d);
         worksheet.addRow([
+          i,
           doc.directing.title,
+          doc.createdAt,
           doc.title,
+          statuses.get(doc.statusCode),
           doc?.car?.carModel || '',
           doc?.car?.stateNumber || '',
           doc?.car?.vin || '',
+          doc?.car?.place || '',
+          doc?.car?.yearProduction || '',
+          doc.mileage,
           doc.author.name,
-          doc.createdAt,
         ]).commit();
       }
 
       ctx.query.lastId = docs[docs.length - 1]._id;
+      i += 1;
     }
 
     await workbook.commit(); // завершить запись
   } catch (error) {
     logger.error('Excel generation error:', error.message);
-    ctx.throw(500, 'generate excel error');
+    ctx.throw(500, 'excel generation error');
   }
 };
 
@@ -558,6 +579,10 @@ function _makePipeline({
 // 2.1 Ищутся автомобили в коллекции cars, где searchCombined содержит подстроку search.
 // 2.2 Для каждого найденного автомобиля подтягиваются связанные документы из docs.
 // 2.3 Результаты помечаются как type: "car".
+// 2.4 Этап $match ((*)) корректно фильтрует автомобили, оставляя только те,
+//     которые связаны с документами, удовлетворяющими всем условиям.
+//     Без него в результаты попадают "битые" связи (автомобили без подходящих документов),
+//     что нарушает логику FULL OUTER JOIN с фильтрацией.
 
 // 3.1 $group устраняет дубликаты (если документ найден и через docs, и через cars).
 // 3.2 types содержит все способы, которыми был найден документ (например, ["doc", "car"]).
@@ -660,7 +685,7 @@ function _getPipelineForSearch({
               ],
             },
           },
-          {
+          { // (*)
             $match: {
               'doc.0': { $exists: true }, // Только автомобили с подходящими документами (обязательно)
             },
