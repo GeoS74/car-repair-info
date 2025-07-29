@@ -512,10 +512,10 @@ module.exports.downloadExcel = async (ctx) => {
           doc.mileage,
           doc.author.name,
         ]).commit();
+        i += 1;
       }
 
       ctx.query.lastId = docs[docs.length - 1]._id;
-      i += 1;
     }
 
     await workbook.commit(); // завершить запись
