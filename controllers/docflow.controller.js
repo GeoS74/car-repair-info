@@ -1,4 +1,5 @@
 const fs = require('fs/promises');
+const { EventEmitter } = require('events');
 const mongoose = require('mongoose');
 const ExcelJS = require('exceljs');
 const path = require('path');
@@ -451,6 +452,13 @@ module.exports.downloadExcel = async (ctx) => {
   });
 
   try {
+    const abortEmitter = new EventEmitter();
+    let connectionClosed = false;
+    ctx.req.on('close', () => { // отследить закрытие соединения
+      abortEmitter.emit('abort');
+      connectionClosed = true;
+    });
+
     const workbook = new ExcelJS.stream.xlsx.WorkbookWriter(
       {
         useStyles: false, // Ускоряет запись
@@ -482,7 +490,7 @@ module.exports.downloadExcel = async (ctx) => {
     ctx.query.lastId = null;
     let i = 1;
 
-    for (;;) {
+    for (; ;) {
       // _makePipeline выбрасывает исключение
       const pipeline = _makePipeline({
         ...ctx.query,
@@ -490,13 +498,15 @@ module.exports.downloadExcel = async (ctx) => {
         user: ctx.user.uid,
       });
 
-      const docs = await _searchByDocAndCar(pipeline);
+      const docs = await _searchByDocAndCar(pipeline, abortEmitter);
 
-      if (!docs.length) {
+      if (!docs.length || connectionClosed) {
         break;
       }
 
       for (const d of docs) {
+        if (connectionClosed) break;
+
         const doc = mapper(d);
         worksheet.addRow([
           i,
@@ -518,14 +528,27 @@ module.exports.downloadExcel = async (ctx) => {
       ctx.query.lastId = docs[docs.length - 1]._id;
     }
 
-    await workbook.commit(); // завершить запись
+    await workbook.commit();
+
+    if (!connectionClosed) {
+      await workbook.commit(); // завершить запись
+    } else {
+      workbook.stream.destroy(); // закрыть поток
+    }
   } catch (error) {
-    logger.error('Excel generation error:', error.message);
-    ctx.throw(500, 'excel generation error');
+    logger.warn('error excel generation:', error.message);
+    ctx.throw(500, 'error excel generation');
   }
 };
 
 module.exports.searchByDocAndCar = async (ctx) => {
+  const abortEmitter = new EventEmitter();
+
+  // Обработчик закрытия соединения
+  ctx.req.on('close', () => {
+    abortEmitter.emit('abort');
+  });
+
   // _makePipeline выбрасывает исключение
   // поэтому добавлен блок try...catch
   try {
@@ -534,18 +557,30 @@ module.exports.searchByDocAndCar = async (ctx) => {
       accessDocTypes: ctx.accessDocTypes,
       user: ctx.user.uid,
     });
-    const docs = await _searchByDocAndCar(pipeline);
+    const docs = await _searchByDocAndCar(pipeline, abortEmitter);
 
     ctx.body = docs.map((doc) => (mapper(doc)));
   } catch (error) {
+    logger.warn(`error search: ${error.message}`);
     ctx.body = [];
   }
 
   ctx.status = 200;
 };
 
-async function _searchByDocAndCar(pipeline) {
-  return Doc.aggregate(pipeline); // .explain("executionStats");
+async function _searchByDocAndCar(pipeline, abortEmitter) {
+  return new Promise((resolve, reject) => {
+    // подписаться на событие отмены
+    const handler = () => reject(new Error('Request aborted'));
+    abortEmitter.once('abort', handler);
+
+    Doc.aggregate(pipeline) // .explain("executionStats");
+      .then((res) => resolve(res))
+      .catch((error) => reject(error))
+      // обязательно отписаться от прослушивания события
+      // иначе будет утечка памяти
+      .finally(() => abortEmitter.off('abort', handler));
+  });
 }
 
 function _makePipeline({
