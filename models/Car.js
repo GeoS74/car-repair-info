@@ -9,14 +9,15 @@ const Schema = new mongoose.Schema({
 
   vin: {
     type: String,
-    unique: 'Не уникальное значение {PATH}',
-    required: 'не заполнено обязательное поле {PATH}',
+    // unique: 'Не уникальное значение {PATH}',
+    // required: 'не заполнено обязательное поле {PATH}',
   },
   stateNumber: {
     type: String,
     unique: 'Не уникальное значение {PATH}',
     required: 'не заполнено обязательное поле {PATH}',
   },
+  chassisNumber: String,
   place: String,
   yearProduction: String,
 
@@ -42,7 +43,7 @@ Schema.index(
 Schema.pre('save', setSearchCombined);
 
 function setSearchCombined() {
-  this.searchCombined = `${this.carModel} ${this.vin} ${this.stateNumber}`;
+  this.searchCombined = `${this.carModel} ${this.vin} ${this.stateNumber} ${this.chassisNumber || ''}`;
 }
 
 // подстрока ищется ИЛИ по индексу полнотекстового поиска
@@ -50,7 +51,9 @@ function setSearchCombined() {
 // этот индекс нужен для возможности объединения полнотекстового поиска
 // и поиска по регулярному выражению
 Schema.index({ vin: 1 });
-Schema.index({ stateNumber: 1, carModel: 1, vin: 1 }, { collation: { locale: 'en', strength: 2 } });
+Schema.index({
+  stateNumber: 1, carModel: 1, vin: 1, chassisNumber: 1,
+}, { collation: { locale: 'en', strength: 2 } });
 Schema.index({ stateNumber: 1 });
 Schema.index({ carModel: 1 });
 Schema.index({ searchCombined: 1 });

@@ -54,9 +54,10 @@ async function _upload(rows) {
       carModel: rows[i][data.structure.carModelField] || undefined,
       vin: rows[i][data.structure.vinField] || undefined,
       stateNumber: rows[i][data.structure.stateNumberField] || undefined,
+      chassisNumber: rows[i][data.structure.chassisNumberField] || undefined,
       place: rows[i][data.structure.placeField] || undefined,
-      yearProduction: rows[i][data.structure.yearProduction] || undefined,
-      searchCombined: `${rows[i][data.structure.carModelField] || ''} ${rows[i][data.structure.vinField] || ''} ${rows[i][data.structure.stateNumberField] || ''}`,
+      yearProduction: rows[i][data.structure.yearProductionField] || undefined,
+      searchCombined: `${rows[i][data.structure.carModelField] || ''} ${rows[i][data.structure.vinField] || ''} ${rows[i][data.structure.stateNumberField] || ''} ${rows[i][data.structure.chassisNumberField] || ''}`,
     });
 
     if ((i + 1) % 5 === 0) {

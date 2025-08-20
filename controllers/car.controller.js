@@ -59,6 +59,7 @@ function _addCar({
   carModel,
   vin,
   stateNumber,
+  chassisNumber,
   place,
   yearProduction,
 }) {
@@ -66,6 +67,7 @@ function _addCar({
     carModel,
     vin,
     stateNumber,
+    chassisNumber,
     place,
     yearProduction,
   });
@@ -75,6 +77,7 @@ function _updateCar(id, {
   carModel,
   vin,
   stateNumber,
+  chassisNumber,
   place,
   yearProduction,
 }) {
@@ -84,6 +87,7 @@ function _updateCar(id, {
       carModel,
       vin,
       stateNumber,
+      chassisNumber,
       place,
       yearProduction,
     },
@@ -116,13 +120,16 @@ function _makeFilterRules({
   const projection = {};
 
   if (search) {
-    filter.$or = [
-      { vin: { $regex: search, $options: 'i' } },
-      { $text: { $search: search, $language: 'russian' } },
+    // поиск регуляркой по объединённому полю "searchCombined"
+    filter.searchCombined = { $regex: search, $options: 'i' };
 
-    ];
-
-    projection.score = { $meta: 'textScore' }; // добавить в данные оценку текстового поиска (релевантность)
+    // поиск с использованием регулярки и текстового индекса
+    // filter.$or = [
+    //   { vin: { $regex: search, $options: 'i' } },
+    //   { $text: { $search: search, $language: 'russian' } },
+    // ];
+    // добавить в данные оценку текстового поиска (релевантность)
+    // projection.score = { $meta: 'textScore' };
   }
 
   if (lastId) {

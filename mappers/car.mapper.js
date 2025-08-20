@@ -1,8 +1,9 @@
 module.exports = (data) => ({
   id: data._id,
   carModel: data.carModel,
-  vin: data.vin,
   stateNumber: data.stateNumber,
+  vin: data.vin || '',
+  chassisNumber: data.chassisNumber || '',
   place: data.place || '',
   yearProduction: data.yearProduction || '',
 });

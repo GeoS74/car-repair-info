@@ -1,5 +1,5 @@
 const { isValidObjectId } = require('mongoose');
-const transliteToEng = require('../../libs/translitter');
+// const transliteToEng = require('../../libs/translitter');
 const Doc = require('../../models/Doc');
 
 module.exports.carModel = async (ctx, next) => {
@@ -14,13 +14,13 @@ module.exports.carModel = async (ctx, next) => {
 };
 
 module.exports.vin = async (ctx, next) => {
-  const vin = _checkVIN(ctx.request?.body?.vin);
-  if (!vin) {
-    ctx.throw(400, 'invalid vin code');
-  }
+  // const vin = _checkVIN(ctx.request?.body?.vin);
+  // if (!vin) {
+  //   ctx.throw(400, 'invalid vin code');
+  // }
+  // ctx.request.body.vin = transliteToEng(vin).toUpperCase();
 
-  ctx.request.body.vin = transliteToEng(vin).toUpperCase();
-
+  ctx.request.body.vin = _checkText(ctx.request?.body?.vin);
   await next();
 };
 
@@ -32,6 +32,11 @@ module.exports.stateNumber = async (ctx, next) => {
 
   ctx.request.body.stateNumber = stateNumber.replace(/\s/g, '').toUpperCase();
 
+  await next();
+};
+
+module.exports.chassisNumber = async (ctx, next) => {
+  ctx.request.body.chassisNumber = _checkText(ctx.request?.body?.chassisNumber);
   await next();
 };
 
@@ -74,13 +79,11 @@ function _checkObjectId(id) {
   return isValidObjectId(id);
 }
 
-function _checkVIN(vinCode) {
-  const vin = vinCode?.trim();
-
-  if (vin?.length === 17) return vin;
-
-  return false;
-}
+// function _checkVIN(vinCode) {
+//   const vin = vinCode?.trim();
+//   if (vin?.length === 17) return vin;
+//   return false;
+// }
 
 function _checkText(text) {
   return text?.trim();

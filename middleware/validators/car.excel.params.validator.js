@@ -79,6 +79,7 @@ function _getStructure(body) {
     carModelField: _getColumnNumber(body?.carModelField),
     vinField: _getColumnNumber(body?.vinField),
     stateNumberField: _getColumnNumber(body?.stateNumberField),
+    chassisNumberField: _getColumnNumber(body?.chassisNumberField),
     placeField: _getColumnNumber(body?.placeField),
     yearProductionField: _getColumnNumber(body?.yearProductionField),
   };

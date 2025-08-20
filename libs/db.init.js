@@ -34,13 +34,15 @@ const Task = require('../models/Task');
   await Status.insertMany([
     { title: 'Новая заявка', code: 10 },
     { title: 'В работе', code: 20 },
-    { title: 'Согласование', code: 30 },
+    { title: 'Согласование ПЗН', code: 30 },
     { title: 'Согласовано механиком', code: 40 },
     { title: 'Ремонт завершен', code: 50 },
-    { title: 'Согласовано заказчиком', code: 60 },
-    { title: 'Выложено в ЭДО', code: 70 },
-    { title: 'Подписано в ЭДО', code: 80 },
-    { title: 'Оплачено', code: 90 },
+    // { title: 'Согласовано заказчиком', code: 60 },
+    { title: 'Согласование цен', code: 60 },
+    { title: 'Согласование работ', code: 70 },
+    { title: 'Выложено в ЭДО', code: 80 },
+    { title: 'Подписано в ЭДО', code: 90 },
+    { title: 'Оплачено', code: 100 },
   ])
     .then(() => logger.info('create and init collection "status"'))
     .catch((error) => logger.warn(error.message))
