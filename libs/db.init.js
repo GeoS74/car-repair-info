@@ -40,9 +40,10 @@ const Task = require('../models/Task');
     // { title: 'Согласовано заказчиком', code: 60 },
     { title: 'Согласование цен', code: 60 },
     { title: 'Согласование работ', code: 70 },
-    { title: 'Выложено в ЭДО', code: 80 },
-    { title: 'Подписано в ЭДО', code: 90 },
-    { title: 'Оплачено', code: 100 },
+    { title: 'Согласовано заказчиком', code: 80 },
+    { title: 'Выложено в ЭДО', code: 90 },
+    { title: 'Подписано в ЭДО', code: 100 },
+    { title: 'Оплачено', code: 110 },
   ])
     .then(() => logger.info('create and init collection "status"'))
     .catch((error) => logger.warn(error.message))
