@@ -1,7 +1,8 @@
 const fs = require('fs/promises');
 const { EventEmitter } = require('events');
 const mongoose = require('mongoose');
-const {PDFDocument} = require('pdf-lib');
+const { PDFDocument, rgb } = require('pdf-lib');
+const fontkit = require('fontkit');
 const ExcelJS = require('exceljs');
 const path = require('path');
 const Doc = require('../models/Doc');
@@ -970,8 +971,10 @@ function _changeStatus(id, { statusCode }) {
     .populate('car');
 }
 
-module.exports.downloadFile = async(ctx) => {
-  try{
+module.exports.downloadFile = async (ctx) => {
+  try {
+    /// ///////////////простая отдача файла//////////////////
+
     // const fpath = './files/scan/'+ctx.params.fname;
     // await fs.access(fpath);
 
@@ -985,34 +988,71 @@ module.exports.downloadFile = async(ctx) => {
 
     // ctx.body = fileBuffer;
 
-    //////////////////////////////////////////////
+    /// ///////////////подпись картинкой//////////////////
 
-    const fpath = './files/scan/'+ctx.params.fname;
+    const fpath = `./files/scan/${ctx.params.fname}`;
     await fs.access(fpath);
     const pdfBuffer = await fs.readFile(fpath);
 
-    const signaturePath = './files/temp/sig.png';
-    await fs.access(signaturePath);
-    const signatureBuffer = await fs.readFile(signaturePath);
+    // const signaturePath = './files/temp/sig.png';
+    // await fs.access(signaturePath);
+    // const signatureBuffer = await fs.readFile(signaturePath);
+
+    // const pdfDoc = await PDFDocument.load(pdfBuffer);
+    // const signature = await pdfDoc.embedPng(signatureBuffer);
+    // const signatureDims = signature.scale(0.5);
+
+    // const pages = pdfDoc.getPages();
+
+    // pages.forEach(page => {
+    //   const {width, height} = page.getSize();
+
+    //   page.drawImage(signature, {
+    //     x: width - signatureDims.width - 50,
+    //     y: height - signatureDims.height,
+
+    //     width: signatureDims.width,
+    //     height: signatureDims.height
+    //   });
+    // });
+
+    /// ///////////////текстовая подпись//////////////////
 
     const pdfDoc = await PDFDocument.load(pdfBuffer);
-    const signature = await pdfDoc.embedPng(signatureBuffer);
-    const signatureDims = signature.scale(0.5);
+    pdfDoc.registerFontkit(fontkit);
+
+    const fontBytes = await fs.readFile('./fonts/DejaVuSans.ttf');
+    const customFont = await pdfDoc.embedFont(fontBytes);
 
     const pages = pdfDoc.getPages();
 
-    pages.forEach(page => {
-      const {width, height} = page.getSize();
+    const signatureText = 'Подписано электронно';
+    const textSize = 12;
+    const textWidth = customFont.widthOfTextAtSize(signatureText, textSize);
+    const textHeight = customFont.heightAtSize(textSize);
 
-      page.drawImage(signature, {
-        x: width - signatureDims.width - 50,
-        y: height - signatureDims.height,
+    pages.forEach((page) => {
+      const { width /*, height*/ } = page.getSize();
 
-        width: signatureDims.width,
-        height: signatureDims.height
+      page.drawRectangle({
+        x: width - textWidth - 30,
+        y: textHeight,
+        width: textWidth + 20,
+        height: textHeight + 10,
+        color: rgb(0.9, 0.95, 1),
+        borderColor: rgb(0.2, 0.4, 0.8),
+        borderWidth: 1,
+        opacity: 0.8,
+      });
+
+      page.drawText(signatureText, {
+        x: width - textWidth - 15,
+        y: textHeight + 10,
+        size: textSize,
+        font: customFont,
+        color: rgb(0.1, 0.3, 0.7),
       });
     });
-
 
     // установить заголовки ДО начала записи
     ctx.set({
@@ -1023,11 +1063,10 @@ module.exports.downloadFile = async(ctx) => {
     const pdfBytes = await pdfDoc.save();
 
     ctx.body = Buffer.from(pdfBytes);
-
-  } catch(error) {
-    if(error.code === 'ENOENT') {
+  } catch (error) {
+    if (error.code === 'ENOENT') {
       ctx.throw(404, 'scan not found');
     }
     throw error;
   }
-}
+};
