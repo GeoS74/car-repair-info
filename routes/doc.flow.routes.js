@@ -193,6 +193,11 @@ router.patch(
   controller.changeStatus,
 );
 
+router.get(
+  '/download/scan/:fname',
+  controller.downloadFile,
+);
+
 module.exports.routes = router.routes();
 
 // static files

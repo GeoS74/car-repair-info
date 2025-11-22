@@ -1,6 +1,7 @@
 const fs = require('fs/promises');
 const { EventEmitter } = require('events');
 const mongoose = require('mongoose');
+const {PDFDocument} = require('pdf-lib');
 const ExcelJS = require('exceljs');
 const path = require('path');
 const Doc = require('../models/Doc');
@@ -967,4 +968,66 @@ function _changeStatus(id, { statusCode }) {
     .populate('task')
     .populate('author')
     .populate('car');
+}
+
+module.exports.downloadFile = async(ctx) => {
+  try{
+    // const fpath = './files/scan/'+ctx.params.fname;
+    // await fs.access(fpath);
+
+    // const fileBuffer = await fs.readFile(fpath);
+
+    // // установить заголовки ДО начала записи
+    // ctx.set({
+    //   'Content-Disposition': 'attachment; filename="test.pdf"',
+    //   'Content-Type': 'application/pdf',
+    // });
+
+    // ctx.body = fileBuffer;
+
+    //////////////////////////////////////////////
+
+    const fpath = './files/scan/'+ctx.params.fname;
+    await fs.access(fpath);
+    const pdfBuffer = await fs.readFile(fpath);
+
+    const signaturePath = './files/temp/sig.png';
+    await fs.access(signaturePath);
+    const signatureBuffer = await fs.readFile(signaturePath);
+
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    const signature = await pdfDoc.embedPng(signatureBuffer);
+    const signatureDims = signature.scale(0.5);
+
+    const pages = pdfDoc.getPages();
+
+    pages.forEach(page => {
+      const {width, height} = page.getSize();
+
+      page.drawImage(signature, {
+        x: width - signatureDims.width - 50,
+        y: height - signatureDims.height,
+
+        width: signatureDims.width,
+        height: signatureDims.height
+      });
+    });
+
+
+    // установить заголовки ДО начала записи
+    ctx.set({
+      'Content-Disposition': 'attachment; filename="test.pdf"',
+      'Content-Type': 'application/pdf',
+    });
+
+    const pdfBytes = await pdfDoc.save();
+
+    ctx.body = Buffer.from(pdfBytes);
+
+  } catch(error) {
+    if(error.code === 'ENOENT') {
+      ctx.throw(404, 'scan not found');
+    }
+    throw error;
+  }
 }
