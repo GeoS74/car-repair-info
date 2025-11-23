@@ -1,6 +1,6 @@
 {
   "name": "car-repair-info",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GeoS74/informator.git"
+    "url": "git+https://github.com/GeoS74/car-repair-info.git"
   },
   "author": "GeoS74",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/GeoS74/informator/issues"
+    "url": "https://github.com/GeoS74/car-repair-info/issues"
   },
-  "homepage": "https://github.com/GeoS74/informator#readme",
+  "homepage": "https://github.com/GeoS74/car-repair-info#readme",
   "dependencies": {
     "@koa/cors": "^4.0.0",
     "dotenv": "^16.0.3",

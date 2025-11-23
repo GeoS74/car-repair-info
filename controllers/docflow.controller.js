@@ -192,6 +192,7 @@ function _updateDoc(id, {
   deadLine,
   sum,
   statusCode,
+  mileage,
 }) {
   return Doc.findByIdAndUpdate(
     id,
@@ -204,6 +205,7 @@ function _updateDoc(id, {
       deadLine,
       sum,
       statusCode,
+      mileage,
     },
     {
       new: true,
@@ -1032,7 +1034,7 @@ module.exports.downloadFile = async (ctx) => {
     const textHeight = customFont.heightAtSize(textSize);
 
     pages.forEach((page) => {
-      const { width /*, height*/ } = page.getSize();
+      const { width /* , height */ } = page.getSize();
 
       page.drawRectangle({
         x: width - textWidth - 30,
